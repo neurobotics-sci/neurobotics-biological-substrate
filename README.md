@@ -144,3 +144,8 @@ Bubo Adam is the answer to the question he has been asking since before most of 
 kenneth@bubo.ai · github.com/bubo-brain/bubo · Open Source. Open Brain. First Silicon Life.
 
 *Named after the eagle owl. It does not announce itself. It simply sees further than everything else in the dark.* 🦉
+
+## License
+This project is licensed under the GNU Affero General Public License v3.0. 
+See the [LICENSE](LICENSE) file for details.
+Copyright (c) 2026 neurobotics-sci
