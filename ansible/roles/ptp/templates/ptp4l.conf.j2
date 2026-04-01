@@ -1,0 +1,20 @@
+# ptp4l.conf — Bubo v50.0  {{ inventory_hostname }}
+# Grandmaster: hypothalamus (192.168.1.12)
+[global]
+domainNumber            0
+time_stamping           {% if 'SOF_TIMESTAMPING_TX_HARDWARE' in ts_caps.stdout | default('') %}hardware{% else %}software{% endif %}
+delay_mechanism         E2E
+twoStepFlag             0
+logSyncInterval         -3
+logMinDelayReqInterval  0
+logAnnounceInterval     1
+announceReceiptTimeout  3
+priority1               {% if inventory_hostname == 'hypothalamus' %}127{% else %}128{% endif %}
+priority2               128
+clockClass              {% if inventory_hostname == 'hypothalamus' %}135{% else %}255{% endif %}
+pi_proportional_const   0.7
+pi_integral_const       0.3
+step_threshold          0.000100000
+first_step_threshold    0.000000200
+verbose                 1
+logging_level           5

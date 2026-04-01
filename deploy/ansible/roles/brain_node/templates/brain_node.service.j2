@@ -1,0 +1,22 @@
+[Unit]
+Description=Bubo Brain Node — {{ bubo_role }}
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=brain
+WorkingDirectory={{ bubo_home }}/src
+EnvironmentFile=/etc/bubo/identity
+EnvironmentFile=/etc/bubo/env
+Environment=PYTHONPATH={{ bubo_home }}/src
+Environment=BUBO_ROLE={{ bubo_role }}
+ExecStart={{ bubo_venv }}/bin/python -m bubo.nodes.{{ bubo_role | replace('-','_') }}
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=60
+StandardOutput=append:/var/log/bubo/{{ bubo_role }}.log
+StandardError=append:/var/log/bubo/{{ bubo_role }}.err
+
+[Install]
+WantedBy=multi-user.target

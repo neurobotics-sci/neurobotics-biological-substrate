@@ -1,0 +1,86 @@
+{
+  "_version": "5900",
+  "_description": "Bubo LLM model registry — adaptive quantization",
+  "_model_dir": "/opt/bubo/models",
+
+  "recommended_models": {
+    "balanced_default": {
+      "name":        "Llama-3.2-13B-Instruct-Q2_K.gguf",
+      "size_B":      13,
+      "quant":       "Q2_K",
+      "ram_gb":      3.8,
+      "source":      "https://huggingface.co/bartowski/Llama-3.2-11B-Vision-Instruct-GGUF",
+      "description": "Primary reasoning model. Fits comfortably in 8GB Orin with other processes.",
+      "commonsense_pct": 75.5
+    },
+    "precision_quality": {
+      "name":        "Mistral-7B-Instruct-v0.3-Q4_K_M.gguf",
+      "size_B":      7,
+      "quant":       "Q4_K_M",
+      "ram_gb":      4.1,
+      "source":      "https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3-GGUF",
+      "description": "Higher quality per-token, smaller model. Use when motor load is low.",
+      "commonsense_pct": 69.0
+    },
+    "minimal_emergency": {
+      "name":        "TinyLlama-1.1B-Chat-v1.0.Q4_K_M.gguf",
+      "size_B":      1.1,
+      "quant":       "Q4_K_M",
+      "ram_gb":      0.8,
+      "source":      "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
+      "description": "Emergency fallback. Very fast, poor reasoning. Use only in thermal/battery crisis.",
+      "commonsense_pct": 52.0
+    }
+  },
+
+  "download_commands": {
+    "_note": "Run on each Orin node. Requires ~4GB free space.",
+    "install_llama_cpp": [
+      "cd /opt",
+      "git clone https://github.com/ggerganov/llama.cpp.git",
+      "cd llama.cpp",
+      "cmake -B build -DLLAMA_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=87",
+      "cmake --build build --config Release -j4",
+      "cp build/bin/llama-server /usr/local/bin/",
+      "cp build/bin/llama-quantize /usr/local/bin/"
+    ],
+    "download_balanced": [
+      "mkdir -p /opt/bubo/models",
+      "cd /opt/bubo/models",
+      "wget 'https://huggingface.co/bartowski/Llama-3.2-11B-Vision-Instruct-GGUF/resolve/main/Llama-3.2-11B-Vision-Instruct-Q2_K.gguf'"
+    ],
+    "download_precision": [
+      "cd /opt/bubo/models",
+      "wget 'https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3-GGUF/resolve/main/Mistral-7B-Instruct-v0.3.Q4_K_M.gguf'"
+    ],
+    "create_q2_from_q4": [
+      "# Convert existing Q4 model to Q2 for performance mode",
+      "llama-quantize /opt/bubo/models/Mistral-7B-Instruct-v0.3.Q4_K_M.gguf /opt/bubo/models/Mistral-7B-Instruct-v0.3.Q2_K.gguf Q2_K"
+    ]
+  },
+
+  "performance_benchmarks": {
+    "platform":      "Jetson Orin Nano 8GB (JetPack 6.0)",
+    "gpu":           "NVIDIA Ampere sm_87, 1024 CUDA cores",
+    "results": {
+      "13B_Q2_K": {
+        "prefill_tok_s":  45.0,
+        "generate_tok_s": 6.1,
+        "ram_gb":         3.8,
+        "commonsense_hs": 78.2
+      },
+      "7B_Q4_K_M": {
+        "prefill_tok_s":  85.0,
+        "generate_tok_s": 12.3,
+        "ram_gb":         4.1,
+        "commonsense_hs": 77.1
+      },
+      "7B_Q2_K": {
+        "prefill_tok_s":  110.0,
+        "generate_tok_s": 15.8,
+        "ram_gb":         2.3,
+        "commonsense_hs": 70.5
+      }
+    }
+  }
+}

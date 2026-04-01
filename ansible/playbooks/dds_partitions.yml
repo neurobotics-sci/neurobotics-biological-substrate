@@ -1,0 +1,25 @@
+---
+- name: "Bubo v5550 — DDS Partition Configuration"
+  hosts: all_brain
+  become: true
+  tasks:
+    - name: Deploy DDS partition profile
+      copy:
+        src: "{{ playbook_dir }}/../../config/dds/partitions/fastdds_partitions.xml"
+        dest: /etc/bubo/fastdds_partitions.xml
+        owner: brain mode: "0644"
+
+    - name: Set DDS partition env (brain user profile)
+      lineinfile:
+        path: /home/brain/.bashrc
+        line: "{{ item }}"
+      loop:
+        - "export FASTRTPS_DEFAULT_PROFILES_FILE=/etc/bubo/fastdds_partitions.xml"
+        - "export FASTDDS_STATISTICS=0"
+        - "export ROS_DISCOVERY_SERVER=192.168.1.10:11811;192.168.1.11:11811"
+
+    - name: Verify partition config
+      command: cat /etc/bubo/fastdds_partitions.xml
+      register: partition_check
+      changed_when: false
+      ignore_errors: yes

@@ -1,0 +1,58 @@
+---
+# deploy/ansible/roles/efs_mount/tasks/main.yml
+# Mounts the AWS EFS filesystem for persistent LTM storage.
+# Used by the memory node (hippocampus + LTM) so that Bubo Adam's
+# memories persist across instance restarts.
+#
+# EFS_ID is passed in from CloudFormation outputs via the deploy script.
+
+- name: Install NFS client
+  apt:
+    name: nfs-common
+    state: present
+    update_cache: true
+
+- name: Create EFS mount point
+  file:
+    path: "{{ efs_mount_point | default('/mnt/bubo-efs') }}"
+    state: directory
+    owner: brain
+    group: brain
+    mode: '0755'
+
+- name: Create LTM data directory on EFS mount point
+  file:
+    path: "{{ efs_mount_point | default('/mnt/bubo-efs') }}/ltm"
+    state: directory
+    owner: brain
+    group: brain
+    mode: '0755'
+  ignore_errors: true
+
+- name: Mount EFS filesystem
+  mount:
+    path: "{{ efs_mount_point | default('/mnt/bubo-efs') }}"
+    src: "{{ efs_id }}.efs.{{ aws_region | default('us-east-1') }}.amazonaws.com:/"
+    fstype: nfs4
+    opts: "nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport"
+    state: mounted
+  vars:
+    efs_id: "{{ lookup('env', 'EFS_ID') | default(hostvars[inventory_hostname]['efs_id'] | default('')) }}"
+  when: efs_id != ''
+  ignore_errors: true
+
+- name: Create bubo data symlink to EFS
+  file:
+    src: "{{ efs_mount_point | default('/mnt/bubo-efs') }}/ltm"
+    dest: /opt/bubo/data/ltm
+    state: link
+    owner: brain
+    force: true
+  ignore_errors: true
+
+- name: Note EFS status
+  debug:
+    msg: >
+      EFS mount configured at {{ efs_mount_point | default('/mnt/bubo-efs') }}.
+      Bubo Adam's long-term memory will persist across restarts.
+      EFS ID: {{ lookup('env', 'EFS_ID') | default('not set — using local storage') }}

@@ -1,0 +1,18 @@
+[Unit]
+Description=Bubo brain node {{ brain_role }} — v50.0
+After=network.target ptp4l.service
+Wants=network.target
+
+[Service]
+Type=simple
+User=brain
+Environment=PYTHONPATH=/opt/bubo
+EnvironmentFile=-/etc/profile.d/cuda_orin.sh
+EnvironmentFile=-/etc/bubo/dds_env.sh
+WorkingDirectory=/opt/bubo
+ExecStart=/usr/bin/python3 -m bubo.nodes.{{ brain_role | replace('_', '.', 1) }}
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,47 @@
+---
+- name: "Bubo v5550 — Glial Cleanup Daemon"
+  hosts: ltm-store
+  become: true
+  tasks:
+    - name: Install glial cleanup script
+      copy:
+        src: "{{ playbook_dir }}/../../scripts/glial/run_glial_cleanup.sh"
+        dest: /usr/local/bin/bubo-glial-cleanup
+        mode: "0755"
+
+    - name: Create glial scripts dir
+      file: path=/opt/bubo/scripts/glial state=directory
+
+    - name: Deploy glial cleanup systemd service
+      copy:
+        dest: /etc/systemd/system/bubo-glial.service
+        content: |
+          [Unit]
+          Description=Bubo Glial Cleanup (runs on charger connect)
+          After=network.target bubo-ltm_store.service
+          [Service]
+          Type=oneshot
+          User=brain
+          Environment=PYTHONPATH=/opt/bubo
+          ExecStart=/usr/bin/python3 /opt/bubo/bubo/glial/glial_cleanup.py --force
+          StandardOutput=append:/var/log/bubo/glial_cleanup.log
+
+    - name: Deploy udev rule for charger detection
+      copy:
+        dest: /etc/udev/rules.d/99-bubo-charger.rules
+        content: |
+          # Trigger glial cleanup when LiFePO4 charger connected
+          SUBSYSTEM=="power_supply", ENV{POWER_SUPPLY_STATUS}=="Charging", \
+            RUN+="/usr/bin/systemctl start bubo-glial.service"
+
+    - name: Reload udev rules
+      command: udevadm control --reload-rules
+      changed_when: false
+
+    - name: Deploy cron for nightly cleanup (backup trigger)
+      cron:
+        name: "Bubo glial cleanup"
+        hour: "3"
+        minute: "0"
+        job: "/usr/local/bin/bubo-glial-cleanup >> /var/log/bubo/glial_cron.log 2>&1"
+        user: brain

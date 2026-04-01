@@ -1,0 +1,48 @@
+---
+- name: "Bubo v5550 — Vagus Nerve Kill Switch Setup"
+  hosts: beagleboard
+  become: true
+  tasks:
+    - name: Enable GPIO 48 (relay control)
+      shell: |
+        echo 48 > /sys/class/gpio/export 2>/dev/null || true
+        echo out > /sys/class/gpio/gpio48/direction 2>/dev/null || true
+        echo 0 > /sys/class/gpio/gpio48/value 2>/dev/null || true
+      changed_when: false
+
+    - name: Enable GPIO 49 (kill button input)
+      shell: |
+        echo 49 > /sys/class/gpio/export 2>/dev/null || true
+        echo in > /sys/class/gpio/gpio49/direction 2>/dev/null || true
+        echo falling > /sys/class/gpio/gpio49/edge 2>/dev/null || true
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Deploy vagus systemd service
+      copy:
+        dest: /etc/systemd/system/bubo-vagus.service
+        content: |
+          [Unit]
+          Description=Bubo Vagus Nerve Kill Switch Monitor
+          After=network.target
+          [Service]
+          Type=simple
+          User=root
+          Environment=PYTHONPATH=/opt/bubo
+          ExecStart=/usr/bin/python3 -c "
+          from bubo.vagus.vagus_nerve import VagusNerve
+          import time
+          v = VagusNerve(sim_mode=False)
+          v.start()
+          while True: v.heartbeat(); time.sleep(1)
+          "
+          Restart=always
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Enable vagus service
+      systemd:
+        name: bubo-vagus
+        enabled: yes
+        state: started
+        daemon_reload: yes

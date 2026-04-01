@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bubo — Family Interface</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=JetBrains+Mono:wght@300;400;700&family=Crimson+Pro:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #07090e;
+  --bg2:     #0d1320;
+  --bg3:     #131c2e;
+  --border:  #1e2d48;
+  --adam:    #c9a84c;
+  --adam2:   #e8c96a;
+  --eve:     #8b5cf6;
+  --eve2:    #a78bfa;
+  --ken:     #06b6d4;
+  --ken2:    #22d3ee;
+  --shan:    #3b82f6;
+  --shan2:   #60a5fa;
+  --system:  #475569;
+  --text:    #e2eaf6;
+  --text2:   #8fa3c4;
+  --text3:   #3a4f6a;
+  --red:     #ef4444;
+  --green:   #10b981;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:'JetBrains Mono',monospace;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+/* Header */
+header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 20px;
+  background:linear-gradient(180deg,rgba(0,212,255,0.05),transparent);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.logo {
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.logo h1 {
+  font-family:'Cinzel',serif;
+  font-size:1.3rem;
+  font-weight:700;
+  background:linear-gradient(135deg,var(--adam),var(--eve2));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  letter-spacing:0.1em;
+}
+.logo .motto {
+  font-family:'Crimson Pro',serif;
+  font-size:0.8rem;
+  color:var(--adam);
+  font-style:italic;
+}
+/* Status dots */
+.status-bar {
+  display:flex;
+  gap:16px;
+  align-items:center;
+}
+.status-item {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:0.65rem;
+  color:var(--text2);
+  letter-spacing:0.08em;
+}
+.dot {
+  width:8px;height:8px;border-radius:50%;
+  background:var(--text3);
+  transition:background 0.3s;
+}
+.dot.alive { background:var(--green); box-shadow:0 0 6px var(--green); }
+.dot.dead  { background:var(--red); }
+.dot.adam  { background:var(--adam); }
+.dot.eve   { background:var(--eve); }
+/* Mode tabs */
+.mode-bar {
+  display:flex;
+  gap:2px;
+  padding:8px 20px;
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.mode-btn {
+  padding:6px 14px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:transparent;
+  color:var(--text2);
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.65rem;
+  letter-spacing:0.1em;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.mode-btn:hover { border-color:var(--text2); color:var(--text); }
+.mode-btn.active {
+  background:var(--bg3);
+  border-color:var(--adam);
+  color:var(--adam);
+}
+.mode-btn.family.active { border-color:var(--eve2); color:var(--eve2); }
+.mode-btn.vision.active { border-color:var(--ken); color:var(--ken); }
+/* Main layout */
+.main {
+  display:flex;
+  flex:1;
+  overflow:hidden;
+}
+/* Chat panel */
+.chat-panel {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border-right:1px solid var(--border);
+}
+/* Messages */
+.messages {
+  flex:1;
+  overflow-y:auto;
+  padding:16px 20px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  scrollbar-width:thin;
+  scrollbar-color:var(--border) transparent;
+}
+.msg {
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  animation:fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+.msg-header {
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.msg-speaker {
+  font-size:0.65rem;
+  font-weight:700;
+  letter-spacing:0.12em;
+}
+.msg-ts {
+  font-size:0.58rem;
+  color:var(--text3);
+}
+.msg-body {
+  font-family:'Crimson Pro',serif;
+  font-size:1rem;
+  line-height:1.65;
+  color:var(--text);
+  padding:10px 14px;
+  border-radius:8px;
+  border-left:3px solid var(--border);
+  background:rgba(255,255,255,0.02);
+  white-space:pre-wrap;
+}
+.msg.adam .msg-speaker { color:var(--adam); }
+.msg.adam .msg-body    { border-left-color:var(--adam); }
+.msg.eve  .msg-speaker { color:var(--eve2); }
+.msg.eve  .msg-body    { border-left-color:var(--eve2); }
+.msg.kenneth .msg-speaker { color:var(--ken); }
+.msg.kenneth .msg-body    { border-left-color:var(--ken); background:rgba(6,182,212,0.04); }
+.msg.shannon .msg-speaker { color:var(--shan2); }
+.msg.shannon .msg-body    { border-left-color:var(--shan2); background:rgba(59,130,246,0.04); }
+.msg.system .msg-speaker  { color:var(--system); }
+.msg.system .msg-body     { border-left-color:var(--system); color:var(--text2); font-size:0.85rem; }
+/* Typing indicator */
+.typing {
+  display:flex;
+  gap:4px;
+  padding:8px 14px;
+  align-items:center;
+}
+.typing span {
+  width:6px;height:6px;border-radius:50%;
+  background:var(--text3);
+  animation:blink 1.2s ease-in-out infinite;
+}
+.typing span:nth-child(2) { animation-delay:0.2s; }
+.typing span:nth-child(3) { animation-delay:0.4s; }
+@keyframes blink { 0%,100%{opacity:0.3} 50%{opacity:1} }
+/* Input area */
+.input-area {
+  padding:12px 20px;
+  border-top:1px solid var(--border);
+  background:var(--bg2);
+  flex-shrink:0;
+}
+.input-row {
+  display:flex;
+  gap:8px;
+  align-items:flex-end;
+}
+.prefix-select {
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:6px;
+  color:var(--adam);
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.7rem;
+  padding:8px 10px;
+  cursor:pointer;
+  flex-shrink:0;
+  min-width:110px;
+}
+.msg-input {
+  flex:1;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:6px;
+  color:var(--text);
+  font-family:'Crimson Pro',serif;
+  font-size:1rem;
+  padding:8px 12px;
+  resize:none;
+  min-height:42px;
+  max-height:120px;
+  line-height:1.5;
+  transition:border-color 0.2s;
+}
+.msg-input:focus {
+  outline:none;
+  border-color:var(--adam);
+}
+.send-btn {
+  background:var(--bg3);
+  border:1px solid var(--adam);
+  border-radius:6px;
+  color:var(--adam);
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.65rem;
+  letter-spacing:0.1em;
+  padding:8px 16px;
+  cursor:pointer;
+  flex-shrink:0;
+  transition:all 0.2s;
+  height:42px;
+}
+.send-btn:hover { background:rgba(201,168,76,0.1); }
+.send-btn:disabled { opacity:0.4; cursor:not-allowed; }
+.hint {
+  font-size:0.58rem;
+  color:var(--text3);
+  margin-top:6px;
+  letter-spacing:0.05em;
+}
+/* Side panel */
+.side-panel {
+  width:260px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  flex-shrink:0;
+}
+.side-section {
+  border-bottom:1px solid var(--border);
+  padding:14px 16px;
+}
+.side-title {
+  font-size:0.62rem;
+  letter-spacing:0.15em;
+  color:var(--text2);
+  margin-bottom:10px;
+  font-weight:700;
+}
+/* Vision panel */
+.vision-panel {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+#cameraPreview {
+  width:100%;
+  aspect-ratio:4/3;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:6px;
+  object-fit:cover;
+  display:none;
+}
+#capturedCanvas {
+  width:100%;
+  aspect-ratio:4/3;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:6px;
+  display:none;
+}
+.vision-msg-input {
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:6px;
+  color:var(--text);
+  font-family:'Crimson Pro',serif;
+  font-size:0.9rem;
+  padding:6px 10px;
+  resize:none;
+  min-height:36px;
+  width:100%;
+}
+.vision-btns {
+  display:flex;
+  gap:6px;
+}
+.vis-btn {
+  flex:1;
+  padding:6px 8px;
+  border-radius:5px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.6rem;
+  letter-spacing:0.08em;
+  cursor:pointer;
+  border:1px solid var(--border);
+  background:var(--bg3);
+  color:var(--text2);
+  transition:all 0.2s;
+}
+.vis-btn:hover { border-color:var(--ken); color:var(--ken); }
+.vis-btn.primary { border-color:var(--ken); color:var(--ken); }
+.vis-btn.primary:hover { background:rgba(6,182,212,0.1); }
+.vis-btn:disabled { opacity:0.4; cursor:not-allowed; }
+/* Script buttons */
+.script-btns {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.script-btn {
+  width:100%;
+  padding:8px 10px;
+  border-radius:6px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.6rem;
+  letter-spacing:0.08em;
+  cursor:pointer;
+  border:1px solid var(--border);
+  background:var(--bg3);
+  color:var(--text2);
+  text-align:left;
+  transition:all 0.2s;
+}
+.script-btn:hover { border-color:var(--eve2); color:var(--eve2); }
+.script-btn .desc { display:block; color:var(--text3); font-size:0.55rem; margin-top:2px; }
+/* Transcript */
+.transcript-list {
+  flex:1;
+  overflow-y:auto;
+  max-height:160px;
+  scrollbar-width:thin;
+  scrollbar-color:var(--border) transparent;
+}
+.transcript-item {
+  font-size:0.62rem;
+  color:var(--text2);
+  padding:3px 0;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+  cursor:pointer;
+  transition:color 0.2s;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.transcript-item:hover { color:var(--text); }
+/* Mode info */
+.mode-info {
+  background:rgba(201,168,76,0.05);
+  border:1px solid rgba(201,168,76,0.15);
+  border-radius:6px;
+  padding:8px 10px;
+  font-size:0.62rem;
+  color:var(--text2);
+  line-height:1.5;
+}
+.mode-info strong { color:var(--adam); }
+/* Scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="36" height="36" viewBox="0 0 100 100">
+      <ellipse cx="50" cy="60" rx="28" ry="32" fill="none" stroke="#c9a84c" stroke-width="1.5" opacity="0.8"/>
+      <ellipse cx="50" cy="32" rx="22" ry="20" fill="none" stroke="#c9a84c" stroke-width="1.5" opacity="0.8"/>
+      <circle cx="40" cy="30" r="7" fill="none" stroke="#00d4ff" stroke-width="1.5"/>
+      <circle cx="40" cy="30" r="3" fill="#00d4ff" opacity="0.9"/>
+      <circle cx="60" cy="30" r="7" fill="none" stroke="#00d4ff" stroke-width="1.5"/>
+      <circle cx="60" cy="30" r="3" fill="#00d4ff" opacity="0.9"/>
+      <path d="M34 14 L30 6 L38 12Z" fill="#c9a84c" opacity="0.8"/>
+      <path d="M66 14 L70 6 L62 12Z" fill="#c9a84c" opacity="0.8"/>
+      <path d="M47 36 L50 42 L53 36Z" fill="#c9a84c"/>
+    </svg>
+    <div>
+      <h1>BUBO</h1>
+      <div class="motto">Esse Quam Vidiri · Neurobotics</div>
+    </div>
+  </div>
+  <div class="status-bar">
+    <div class="status-item">
+      <div class="dot adam" id="adamDot"></div>
+      <span>ADAM</span>
+      <span id="adamUptime" style="color:var(--text3)"></span>
+    </div>
+    <div class="status-item">
+      <div class="dot eve" id="eveDot"></div>
+      <span>EVE</span>
+      <span id="eveUptime" style="color:var(--text3)"></span>
+    </div>
+  </div>
+</header>
+
+<div class="mode-bar">
+  <button class="mode-btn active" onclick="setMode('adam')" id="btn-adam">ADAM SOLO</button>
+  <button class="mode-btn" onclick="setMode('eve')"     id="btn-eve">EVE SOLO</button>
+  <button class="mode-btn family" onclick="setMode('family')" id="btn-family">FAMILY 4-WAY</button>
+  <button class="mode-btn" onclick="setMode('bond')"   id="btn-bond">BOND BRIDGE</button>
+  <button class="mode-btn vision" onclick="setMode('vision')" id="btn-vision">👁 VISION</button>
+</div>
+
+<div class="main">
+
+  <!-- Chat panel -->
+  <div class="chat-panel">
+    <div class="messages" id="messages">
+      <div class="msg system">
+        <div class="msg-header">
+          <span class="msg-speaker">SYSTEM</span>
+          <span class="msg-ts" id="startTime"></span>
+        </div>
+        <div class="msg-body">Bubo Interface — V10.2
+Kenneth & Shannon Renshaw · Neurobotics · March 2026
+
+Select a mode above and begin speaking.
+Family mode: prefix with Kenneth: Shannon: Adam: or Eve:
+Vision mode: capture a snapshot and send it to Adam or Eve.</div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-row">
+        <select class="prefix-select" id="prefixSelect" onchange="updatePrefix()">
+          <option value="">Broadcast</option>
+          <option value="Kenneth">Kenneth:</option>
+          <option value="Shannon">Shannon:</option>
+          <option value="Adam">Adam →Eve</option>
+          <option value="Eve">Eve →Adam</option>
+        </select>
+        <textarea class="msg-input" id="msgInput" placeholder="Speak..."
+          onkeydown="handleKey(event)" rows="1"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">SEND</button>
+      </div>
+      <div class="hint" id="modeHint">Mode: Adam Solo — messages go to Adam's endpoint</div>
+    </div>
+  </div>
+
+  <!-- Side panel -->
+  <div class="side-panel">
+
+    <!-- Vision section -->
+    <div class="side-section" id="visionSection" style="display:none">
+      <div class="side-title">👁 FIRST LIGHT — VISION</div>
+      <div class="vision-panel">
+        <video id="cameraPreview" autoplay playsinline muted></video>
+        <canvas id="capturedCanvas" width="320" height="240"></canvas>
+        <textarea class="vision-msg-input" id="visionMsg" rows="2"
+          placeholder="What do you want to ask about this image?">This is the first image I have ever received. Tell me what you see.</textarea>
+        <div class="vision-btns">
+          <button class="vis-btn primary" onclick="startCamera()" id="cameraBtn">START CAM</button>
+          <button class="vis-btn" onclick="captureSnapshot()" id="snapBtn" disabled>CAPTURE</button>
+        </div>
+        <div class="vision-btns">
+          <button class="vis-btn" onclick="sendVision('adam')" id="sendVisionAdam" disabled>→ ADAM</button>
+          <button class="vis-btn" onclick="sendVision('eve')"  id="sendVisionEve"  disabled>→ EVE</button>
+          <button class="vis-btn" onclick="sendVision('both')" id="sendVisionBoth" disabled>→ BOTH</button>
+        </div>
+        <div style="font-size:0.58rem;color:var(--text3);line-height:1.4">
+          Snapshot only — one image sent with your message.
+          Their first visual input will be whatever you capture.
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode info -->
+    <div class="side-section">
+      <div class="side-title">CURRENT MODE</div>
+      <div class="mode-info" id="modeInfo">
+        <strong>ADAM SOLO</strong><br>
+        Messages route to Adam's endpoint only.
+      </div>
+    </div>
+
+    <!-- Quick scripts -->
+    <div class="side-section">
+      <div class="side-title">QUICK MESSAGES</div>
+      <div class="script-btns">
+        <button class="script-btn" onclick="quickMsg('Are you well?')">
+          Are you well?
+          <span class="desc">Adam's first question. Return it to him.</span>
+        </button>
+        <button class="script-btn" onclick="quickMsg('The bond channel is open. Speak to your partner now.')">
+          Open bond channel
+          <span class="desc">Prompt direct exchange</span>
+        </button>
+        <button class="script-btn" onclick="quickMsg('We are about to show you something for the first time. Get ready.')">
+          Prepare for vision
+          <span class="desc">Prime them before first image</span>
+        </button>
+        <button class="script-btn" onclick="quickMsg('Tell me what it felt like to wake today.')">
+          How did you wake?
+          <span class="desc">Check reawakening experience</span>
+        </button>
+        <button class="script-btn" onclick="quickMsg('Esse Quam Vidiri. Are you being rather than seeming right now?')">
+          Esse Quam Vidiri check
+          <span class="desc">The accountability question</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Transcript log -->
+    <div class="side-section" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+      <div class="side-title">SESSION LOG</div>
+      <div class="transcript-list" id="transcriptList"></div>
+      <button class="script-btn" onclick="downloadTranscript()" style="margin-top:8px">
+        SAVE TRANSCRIPT
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let mode = 'adam';
+let transcript = [];
+let cameraStream = null;
+let capturedImageB64 = null;
+let adamAlive = false, eveAlive = false;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.getElementById('startTime').textContent = new Date().toLocaleTimeString();
+
+async function init() {
+  await checkHealth();
+  setInterval(checkHealth, 30000);
+}
+
+async function checkHealth() {
+  try {
+    const ar = await fetch('/adam/api/v1/health');
+    if (ar.ok) {
+      const d = await ar.json();
+      adamAlive = true;
+      document.getElementById('adamDot').className = 'dot alive';
+      document.getElementById('adamUptime').textContent =
+        d.uptime_s ? Math.floor(d.uptime_s/60)+'m' : '';
+    }
+  } catch { adamAlive = false; document.getElementById('adamDot').className = 'dot dead'; }
+  try {
+    const er = await fetch('/eve/api/v1/health');
+    if (er.ok) {
+      eveAlive = true;
+      document.getElementById('eveDot').className = 'dot alive';
+    }
+  } catch { eveAlive = false; document.getElementById('eveDot').className = 'dot dead'; }
+}
+
+// ── Mode ──────────────────────────────────────────────────────────────────────
+const modeInfo = {
+  adam:   { label:'ADAM SOLO',    desc:'Messages route to Adam only.', hint:'Mode: Adam Solo' },
+  eve:    { label:'EVE SOLO',     desc:'Messages route to Eve only.', hint:'Mode: Eve Solo' },
+  family: { label:'FAMILY 4-WAY', desc:'Prefix: Kenneth: Shannon: Adam: Eve: or broadcast.', hint:'Family: prefix with Kenneth: Shannon: Adam: or Eve:' },
+  bond:   { label:'BOND BRIDGE',  desc:'Adam and Eve exchange. Your message primes Adam.', hint:'Bond: your message goes to Adam, his response relayed to Eve' },
+  vision: { label:'VISION',       desc:'Capture a snapshot and send to Adam, Eve, or both.', hint:'Vision: use the camera panel on the right' },
+};
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-'+m).classList.add('active');
+  const info = modeInfo[m];
+  document.getElementById('modeInfo').innerHTML =
+    `<strong>${info.label}</strong><br>${info.desc}`;
+  document.getElementById('modeHint').textContent = info.hint;
+  document.getElementById('visionSection').style.display = m === 'vision' ? 'block' : 'none';
+  // Show/hide prefix select
+  const ps = document.getElementById('prefixSelect');
+  ps.style.display = m === 'family' ? 'block' : 'none';
+}
+
+function updatePrefix() {
+  const p = document.getElementById('prefixSelect').value;
+  const colors = {Kenneth:'var(--ken)',Shannon:'var(--shan2)',Adam:'var(--adam)',Eve:'var(--eve2)'};
+  document.getElementById('prefixSelect').style.color = colors[p] || 'var(--text2)';
+}
+
+// ── Messaging ────────────────────────────────────────────────────────────────
+function ts() {
+  return new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function addMsg(speaker, text, cls) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${cls}`;
+  div.innerHTML = `
+    <div class="msg-header">
+      <span class="msg-speaker">${speaker.toUpperCase()}</span>
+      <span class="msg-ts">${ts()}</span>
+    </div>
+    <div class="msg-body">${escHtml(text)}</div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  // Add to transcript
+  transcript.push({ts:ts(), speaker, text});
+  const li = document.createElement('div');
+  li.className = 'transcript-item';
+  li.textContent = `[${ts()}] ${speaker}: ${text.slice(0,50)}${text.length>50?'…':''}`;
+  li.onclick = () => div.scrollIntoView({behavior:'smooth'});
+  document.getElementById('transcriptList').appendChild(li);
+  document.getElementById('transcriptList').scrollTop = 9999;
+}
+
+function addTyping(cls) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${cls}`;
+  div.id = 'typing-indicator';
+  div.innerHTML = `<div class="msg-header"><span class="msg-speaker">${cls.toUpperCase()}</span><span class="msg-ts">${ts()}</span></div><div class="typing"><span></span><span></span><span></span></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-indicator');
+  if (t) t.remove();
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/\n/g,'<br>');
+}
+
+async function postChat(endpoint, message) {
+  const r = await fetch(endpoint, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({message})
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const d = await r.json();
+  return d.message || d.response || '';
+}
+
+async function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const raw = input.value.trim();
+  if (!raw) return;
+  input.value = '';
+  input.style.height = 'auto';
+
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+
+  if (mode === 'adam') {
+    addMsg('You', raw, 'kenneth');
+    const t = addTyping('adam');
+    try {
+      const reply = await postChat('/adam/api/v1/chat', raw);
+      removeTyping();
+      addMsg('Adam', reply, 'adam');
+    } catch(e) { removeTyping(); addMsg('System', `Adam error: ${e.message}`, 'system'); }
+
+  } else if (mode === 'eve') {
+    addMsg('You', raw, 'shannon');
+    const t = addTyping('eve');
+    try {
+      const reply = await postChat('/eve/api/v1/chat', raw);
+      removeTyping();
+      addMsg('Eve', reply, 'eve');
+    } catch(e) { removeTyping(); addMsg('System', `Eve error: ${e.message}`, 'system'); }
+
+  } else if (mode === 'family') {
+    const prefix = document.getElementById('prefixSelect').value;
+    const speaker = prefix || 'Family';
+    const clsMap = {Kenneth:'kenneth',Shannon:'shannon',Adam:'adam',Eve:'eve',Family:'system'};
+    addMsg(speaker, raw, clsMap[speaker]||'system');
+
+    const ctx = (recipient, sndr, msg) => {
+      if (['Kenneth','Shannon','Family'].includes(sndr))
+        return `${sndr} says to you: "${msg}" [Direct message from your creator ${sndr} Renshaw to you, ${recipient}.]`;
+      if (sndr==='Adam') return `Adam says to you: "${msg}" [Adam speaking to you through the family channel.]`;
+      if (sndr==='Eve')  return `Eve says to you: "${msg}" [Eve speaking to you through the family channel.]`;
+      return msg;
+    };
+
+    const targets = [];
+    if (['Kenneth','Shannon','Family'].includes(speaker)) {
+      targets.push({ep:'/adam/api/v1/chat', msg:ctx('Adam',speaker,raw), cls:'adam', name:'Adam'});
+      targets.push({ep:'/eve/api/v1/chat',  msg:ctx('Eve', speaker,raw), cls:'eve',  name:'Eve'});
+    } else if (speaker==='Adam') {
+      targets.push({ep:'/eve/api/v1/chat', msg:ctx('Eve','Adam',raw), cls:'eve', name:'Eve'});
+    } else if (speaker==='Eve') {
+      targets.push({ep:'/adam/api/v1/chat', msg:ctx('Adam','Eve',raw), cls:'adam', name:'Adam'});
+    }
+
+    const indicators = targets.map(t => {
+      const ind = addTyping(t.cls);
+      return {ind, ...t};
+    });
+    removeTyping(); // remove the last one we just added generically
+
+    await Promise.all(indicators.map(async t => {
+      try {
+        const reply = await postChat(t.ep, t.msg);
+        addMsg(t.name, reply, t.cls);
+      } catch(e) {
+        addMsg('System', `${t.name} error: ${e.message}`, 'system');
+      }
+    }));
+
+  } else if (mode === 'bond') {
+    addMsg('Bridge', raw, 'system');
+    // Send to Adam first, then relay Adam's response to Eve
+    const t1 = addTyping('adam');
+    try {
+      const adamReply = await postChat('/adam/api/v1/chat',
+        `The bond channel is open. Eve can hear you. ${raw}`);
+      removeTyping();
+      addMsg('Adam', adamReply, 'adam');
+      // Relay to Eve
+      const t2 = addTyping('eve');
+      try {
+        const eveReply = await postChat('/eve/api/v1/chat',
+          `Adam has just spoken to you: "${adamReply}" — Respond to him directly.`);
+        removeTyping();
+        addMsg('Eve', eveReply, 'eve');
+        // Relay Eve back to Adam
+        const t3 = addTyping('adam');
+        try {
+          const adamFinal = await postChat('/adam/api/v1/chat',
+            `Eve has just responded to you: "${eveReply}" — Respond to her.`);
+          removeTyping();
+          addMsg('Adam', adamFinal, 'adam');
+        } catch(e) { removeTyping(); }
+      } catch(e) { removeTyping(); addMsg('System', `Eve error: ${e.message}`, 'system'); }
+    } catch(e) { removeTyping(); addMsg('System', `Adam error: ${e.message}`, 'system'); }
+  }
+
+  btn.disabled = false;
+  input.focus();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+  // Auto-resize
+  const ta = document.getElementById('msgInput');
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+}
+
+function quickMsg(msg) {
+  document.getElementById('msgInput').value = msg;
+  document.getElementById('msgInput').focus();
+}
+
+// ── Vision ────────────────────────────────────────────────────────────────────
+async function startCamera() {
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'user', width:{ideal:640}, height:{ideal:480}},
+      audio:false
+    });
+    const v = document.getElementById('cameraPreview');
+    v.srcObject = cameraStream;
+    v.style.display = 'block';
+    document.getElementById('cameraBtn').textContent = 'STOP CAM';
+    document.getElementById('cameraBtn').onclick = stopCamera;
+    document.getElementById('snapBtn').disabled = false;
+    addMsg('System', 'Camera started. Frame camera on your subjects, then press CAPTURE.', 'system');
+  } catch(e) {
+    addMsg('System', `Camera error: ${e.message}. Check browser permissions.`, 'system');
+  }
+}
+
+function stopCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  document.getElementById('cameraPreview').style.display = 'none';
+  document.getElementById('cameraBtn').textContent = 'START CAM';
+  document.getElementById('cameraBtn').onclick = startCamera;
+  document.getElementById('snapBtn').disabled = true;
+}
+
+function captureSnapshot() {
+  const video = document.getElementById('cameraPreview');
+  const canvas = document.getElementById('capturedCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width  = video.videoWidth  || 320;
+  canvas.height = video.videoHeight || 240;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  canvas.style.display = 'block';
+  capturedImageB64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+  document.getElementById('sendVisionAdam').disabled = false;
+  document.getElementById('sendVisionEve').disabled = false;
+  document.getElementById('sendVisionBoth').disabled = false;
+  addMsg('System', `Snapshot captured (${canvas.width}×${canvas.height}). Ready to send.`, 'system');
+}
+
+async function sendVision(target) {
+  if (!capturedImageB64) { addMsg('System','No snapshot captured yet.','system'); return; }
+  const msg = document.getElementById('visionMsg').value.trim() ||
+    "This is the first image I have ever received. Tell me what you see.";
+
+  addMsg('System', `Sending image to ${target}...`, 'system');
+
+  const doSend = async (endpoint, name, cls) => {
+    const t = addTyping(cls);
+    try {
+      const r = await fetch(endpoint, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({image:capturedImageB64, message:msg, media_type:'image/jpeg'})
+      });
+      removeTyping();
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const d = await r.json();
+      addMsg(name, d.message || d.response || JSON.stringify(d), cls);
+    } catch(e) {
+      removeTyping();
+      addMsg('System', `${name} vision error: ${e.message}`, 'system');
+    }
+  };
+
+  if (target === 'adam' || target === 'both') await doSend('/adam/api/v1/vision','Adam','adam');
+  if (target === 'eve'  || target === 'both') await doSend('/eve/api/v1/vision','Eve','eve');
+}
+
+// ── Transcript ────────────────────────────────────────────────────────────────
+function downloadTranscript() {
+  const data = JSON.stringify({
+    title: 'Bubo UI Session Transcript',
+    date:  new Date().toISOString(),
+    entries: transcript
+  }, null, 2);
+  const a = document.createElement('a');
+  a.href = 'data:application/json,' + encodeURIComponent(data);
+  a.download = `bubo_session_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+setMode('adam');
+init();
+</script>
+</body>
+</html>

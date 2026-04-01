@@ -1,0 +1,110 @@
+---
+# deploy/ansible/site_hardware.yml
+# Master playbook for hardware_local and hardware_api profiles.
+# The llm_tag variable selects either the llm_local or llm_api role.
+#
+# Variables:
+#   bubo_profile: hardware_local | hardware_api
+#   llm_tag:      llm_local | llm_api
+
+- name: "Bubo — Bootstrap all hardware nodes"
+  hosts: all
+  become: true
+  gather_facts: true
+  tags: [bootstrap, always]
+  roles:
+    - common
+
+- name: "Bubo — Homeostatic tier (hypothalamus, thalami, insula)"
+  hosts: homeostatic
+  become: true
+  tags: [homeostatic, tier1]
+  roles:
+    - brain_node
+
+- name: "Bubo — Limbic tier (amygdala, hippocampus)"
+  hosts: limbic
+  become: true
+  tags: [limbic, tier2]
+  roles:
+    - brain_node
+
+- name: "Bubo — Memory (LTM, association)"
+  hosts: memory
+  become: true
+  tags: [memory, tier3]
+  roles:
+    - brain_node
+
+- name: "Bubo — Sensory tier (visual, auditory, S1, SC)"
+  hosts: sensory
+  become: true
+  tags: [sensory, tier4]
+  roles:
+    - brain_node
+
+- name: "Bubo — Motor tier (cerebellum, BG, M1, premotor)"
+  hosts: motor
+  become: true
+  tags: [motor, tier5]
+  roles:
+    - brain_node
+
+- name: "Bubo — Social tier (social, broca, emotion)"
+  hosts: social
+  become: true
+  tags: [social, tier5]
+  roles:
+    - brain_node
+
+- name: "Bubo — Cortical tier (PFC-L, PFC-R)"
+  hosts: cortical
+  become: true
+  tags: [cortex, tier7]
+  roles:
+    - brain_node
+
+- name: "Bubo — Spinal tier (arms, legs)"
+  hosts: spinal
+  become: true
+  tags: [spinal]
+  roles:
+    - brain_node
+
+# ── LLM tier: conditional on llm_tag ────────────────────────────────────────
+- name: "Bubo — LLM Local (AGX Orin 70B)"
+  hosts: llm_node
+  become: true
+  tags: [llm, llm_local]
+  when: llm_tag == 'llm_local'
+  roles:
+    - llm_local
+
+- name: "Bubo — LLM API (Claude — no hardware node)"
+  hosts: cortical   # API config goes on PFC nodes
+  become: true
+  tags: [llm, llm_api]
+  when: llm_tag == 'llm_api'
+  roles:
+    - llm_api
+
+- name: "Bubo — Hardware safety (vagus, galvanic barrier)"
+  hosts: spinal
+  become: true
+  tags: [safety]
+  roles:
+    - safety_hw
+
+- name: "Bubo — Verify deployment"
+  hosts: all
+  become: false
+  tags: [verify, always]
+  tasks:
+    - name: Check Python and ZMQ
+      command: "{{ bubo_venv }}/bin/python -c 'import zmq; print(\"zmq\", zmq.__version__)'"
+      register: zmq_check
+      changed_when: false
+      ignore_errors: true
+    - name: Deployment summary
+      debug:
+        msg: "{{ inventory_hostname }}: {{ zmq_check.stdout | default('zmq check failed') }}"

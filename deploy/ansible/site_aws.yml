@@ -1,0 +1,78 @@
+---
+# deploy/ansible/site_aws.yml
+# Master playbook for aws_local and aws_api profiles.
+
+- name: "Bubo Cloud — Bootstrap all EC2 nodes"
+  hosts: all
+  become: true
+  gather_facts: true
+  tags: [bootstrap, always]
+  roles:
+    - common
+
+- name: "Bubo Cloud — Gateway (API + WebSocket)"
+  hosts: bubo_gateway
+  become: true
+  tags: [gateway]
+  roles:
+    - gateway
+
+- name: "Bubo Cloud — Limbic (amygdala + hypothalamus)"
+  hosts: bubo_limbic
+  become: true
+  tags: [limbic]
+  roles:
+    - brain_node
+
+- name: "Bubo Cloud — Memory (LTM + hippocampus + EFS)"
+  hosts: bubo_memory
+  become: true
+  tags: [memory]
+  roles:
+    - brain_node
+    - efs_mount
+
+- name: "Bubo Cloud — Social (emotion + curiosity + speech + web)"
+  hosts: bubo_social
+  become: true
+  tags: [social]
+  roles:
+    - brain_node
+
+- name: "Bubo Cloud — Cortex (PFC + NALB + GWT)"
+  hosts: bubo_cortex
+  become: true
+  tags: [cortex]
+  roles:
+    - brain_node
+
+# ── LLM tier: conditional on llm_tag ────────────────────────────────────────
+- name: "Bubo Cloud — LLM Local (GPU instance)"
+  hosts: bubo_llm
+  become: true
+  tags: [llm, llm_local]
+  when: llm_tag | default('') == 'llm_local'
+  roles:
+    - llm_local
+
+- name: "Bubo Cloud — LLM API (Claude — no GPU instance)"
+  hosts: bubo_cortex
+  become: true
+  tags: [llm, llm_api]
+  when: llm_tag | default('') == 'llm_api'
+  roles:
+    - llm_api
+
+- name: "Bubo Cloud — Verify"
+  hosts: bubo_gateway
+  become: false
+  tags: [verify, always]
+  tasks:
+    - name: Health check
+      uri:
+        url: "http://localhost:5599/api/v1/health"
+        timeout: 10
+      register: health
+      ignore_errors: true
+    - debug:
+        msg: "Gateway health: {{ health.status | default('not ready yet') }}"

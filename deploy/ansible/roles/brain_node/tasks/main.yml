@@ -1,0 +1,39 @@
+---
+# deploy/ansible/roles/brain_node/tasks/main.yml
+# Deploy a generic Bubo brain node.
+# Uses bubo_role variable to determine which module to launch.
+
+- name: Install node-specific Python packages
+  pip:
+    name: "{{ node_pip_packages | default([]) }}"
+    virtualenv: "{{ bubo_venv }}"
+  become_user: brain
+  when: node_pip_packages is defined and node_pip_packages | length > 0
+
+- name: Generate cluster config for this node
+  template:
+    src: cluster_config.json.j2
+    dest: /etc/bubo/config.json
+    owner: brain
+    mode: '0644'
+
+- name: Create systemd service for brain node
+  template:
+    src: brain_node.service.j2
+    dest: "/etc/systemd/system/bubo-{{ bubo_role }}.service"
+    owner: root
+    mode: '0644'
+
+- name: Enable and start brain node
+  systemd:
+    name: "bubo-{{ bubo_role }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for node heartbeat
+  wait_for:
+    port: "{{ bubo_port }}"
+    host: "{{ ansible_host }}"
+    timeout: 30
+  ignore_errors: true

@@ -1,0 +1,43 @@
+---
+- name: Deploy DDS SHM profile
+  copy:
+    src: "{{ playbook_dir }}/../../config/dds/fastdds_shm.xml"
+    dest: /etc/bubo/fastdds.xml
+    owner: brain mode: "0644"
+
+- name: Set DDS environment
+  copy:
+    dest: /etc/bubo/dds_env.sh
+    content: |
+      export FASTRTPS_DEFAULT_PROFILES_FILE=/etc/bubo/fastdds.xml
+      export ROS_DISCOVERY_SERVER=192.168.1.10:11811;192.168.1.11:11811
+      export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+      export FASTDDS_STATISTICS=1
+    mode: "0644"
+
+- name: Kernel network tuning
+  sysctl:
+    name: "{{ item.k }}"
+    value: "{{ item.v }}"
+    state: present
+    sysctl_set: yes
+  loop:
+    - {k: net.core.rmem_max,   v: "8388608"}
+    - {k: net.core.wmem_max,   v: "8388608"}
+    - {k: net.core.rmem_default, v: "2097152"}
+    - {k: net.core.wmem_default, v: "2097152"}
+    - {k: net.core.netdev_max_backlog, v: "5000"}
+
+- name: Start DDS Discovery Server (pfc-l)
+  shell: |
+    pkill -f 'fastdds discovery' 2>/dev/null || true
+    nohup fastdds discovery -i 0 -l 192.168.1.10 -p 11811       >> /var/log/bubo/dds_discovery.log 2>&1 &
+  when: inventory_hostname == 'pfc-l'
+  ignore_errors: yes
+
+- name: Start DDS Discovery Server (pfc-r backup)
+  shell: |
+    pkill -f 'fastdds discovery' 2>/dev/null || true
+    nohup fastdds discovery -i 1 -l 192.168.1.11 -p 11811       >> /var/log/bubo/dds_discovery.log 2>&1 &
+  when: inventory_hostname == 'pfc-r'
+  ignore_errors: yes

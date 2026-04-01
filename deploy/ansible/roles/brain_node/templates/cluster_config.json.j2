@@ -1,0 +1,17 @@
+{
+  "node_role":    "{{ bubo_role }}",
+  "pub_port":     {{ bubo_port }},
+  "profile":      "{{ bubo_profile }}",
+  "version":      "{{ bubo_version | default('9000') }}",
+  "llm_backend":  "{{ llm_tag | replace('llm_','') }}",
+  "sub_endpoints": [
+{% set ns = namespace(first=true) %}
+{% for host in groups['all'] %}
+{% if hostvars[host]['bubo_role'] is defined and hostvars[host]['bubo_role'] != bubo_role %}
+{% if not ns.first %},{% endif %}
+    "tcp://{{ hostvars[host]['ansible_host'] }}:{{ hostvars[host]['bubo_port'] }}"
+{% set ns.first = false %}
+{% endif %}
+{% endfor %}
+  ]
+}

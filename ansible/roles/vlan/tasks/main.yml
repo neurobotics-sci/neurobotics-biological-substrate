@@ -1,0 +1,106 @@
+---
+# ansible/roles/vlan/tasks/main.yml — Bubo v50.0
+# Configures IEEE 802.1Q VLAN sub-interfaces on each brain node.
+# VLAN 40 (management) is the native/untagged interface — always present.
+# VLAN 10, 20, 30 are configured based on node role (host_vars).
+#
+# After this role:
+#   eth0      → VLAN 40 (management, SSH, PTP)
+#   eth0.10   → VLAN 10 (high-road logic) — if node_vlan_10: true
+#   eth0.20   → VLAN 20 (low-road reflex) — if node_vlan_20: true
+#   eth0.30   → VLAN 30 (neuromodulators) — if node_vlan_30: true
+#
+# ZMQ endpoints then bind to appropriate VLAN interface IPs:
+#   High-road topics (CTX_*, LMB_*) → bind eth0.10 address
+#   Reflex topics   (SPN_*, CRB_*)  → bind eth0.20 address
+#   Neuromodulators (NM_*)          → bind eth0.30 address
+#   Management                       → bind eth0 address
+
+- name: Install VLAN kernel module
+  apt:
+    name: vlan
+    state: present
+
+- name: Ensure 8021q module loads at boot
+  lineinfile:
+    path: /etc/modules
+    line: "8021q"
+    state: present
+
+- name: Load 8021q now
+  modprobe:
+    name: 8021q
+    state: present
+
+- name: Configure VLAN 10 sub-interface (high-road logic)
+  when: node_vlan_10 | default(false)
+  block:
+    - name: Create eth0.10
+      command: ip link add link eth0 name eth0.10 type vlan id 10
+      changed_when: false
+      ignore_errors: yes
+    - name: Bring up eth0.10
+      command: ip link set dev eth0.10 up
+      changed_when: false
+    - name: Set VLAN 10 IP
+      command: ip addr add {{ node_ip_vlan10 }}/24 dev eth0.10
+      changed_when: false
+      ignore_errors: yes
+    - name: Set CoS 5 on VLAN 10
+      command: ip link set dev eth0.10 type vlan egress-qos-map 0:5
+      changed_when: false
+      ignore_errors: yes
+
+- name: Configure VLAN 20 sub-interface (low-road reflex)
+  when: node_vlan_20 | default(false)
+  block:
+    - name: Create eth0.20
+      command: ip link add link eth0 name eth0.20 type vlan id 20
+      changed_when: false
+      ignore_errors: yes
+    - name: Bring up eth0.20
+      command: ip link set dev eth0.20 up
+      changed_when: false
+    - name: Set VLAN 20 IP
+      command: ip addr add {{ node_ip_vlan20 }}/24 dev eth0.20
+      changed_when: false
+      ignore_errors: yes
+    - name: Set CoS 7 (strict priority) on VLAN 20
+      command: ip link set dev eth0.20 type vlan egress-qos-map 0:7
+      changed_when: false
+      ignore_errors: yes
+
+- name: Configure VLAN 30 sub-interface (neuromodulators)
+  when: node_vlan_30 | default(false)
+  block:
+    - name: Create eth0.30
+      command: ip link add link eth0 name eth0.30 type vlan id 30
+      changed_when: false
+      ignore_errors: yes
+    - name: Bring up eth0.30
+      command: ip link set dev eth0.30 up
+      changed_when: false
+    - name: Set VLAN 30 IP
+      command: ip addr add {{ node_ip_vlan30 }}/24 dev eth0.30
+      changed_when: false
+      ignore_errors: yes
+    - name: Set CoS 2 on VLAN 30
+      command: ip link set dev eth0.30 type vlan egress-qos-map 0:2
+      changed_when: false
+      ignore_errors: yes
+
+- name: Persist VLAN config in /etc/network/interfaces
+  template:
+    src: vlan_interfaces.j2
+    dest: /etc/network/interfaces.d/bubo_vlan.conf
+    owner: root
+    mode: "0644"
+
+- name: Verify VLAN sub-interfaces
+  command: ip link show | grep eth0
+  register: vlan_check
+  changed_when: false
+
+- name: Show VLAN interfaces
+  debug:
+    msg: "{{ vlan_check.stdout_lines }}"

@@ -1,0 +1,13 @@
+[Unit]
+Description=PHC to CLOCK_REALTIME — Bubo v50.0
+After=ptp4l.service
+Requires=ptp4l.service
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/phc2sys -s /dev/ptp0 -c CLOCK_REALTIME -w -m
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

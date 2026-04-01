@@ -1,0 +1,64 @@
+---
+- name: "Bubo v5900 — Edge-LLM with Adaptive Quantization"
+  hosts: llm_nodes
+  become: true
+  tasks:
+    - name: Install llama.cpp dependencies
+      apt:
+        name: [cmake, libcurl4-openssl-dev, git]
+        state: present
+      ignore_errors: yes
+
+    - name: Create models directory
+      file: path=/opt/bubo/models state=directory owner=brain mode=0755
+
+    - name: Check if llama-server binary exists
+      stat: path=/usr/local/bin/llama-server
+      register: llama_bin
+
+    - name: Build llama.cpp with CUDA sm_87 (Orin Nano)
+      shell: |
+        cd /opt && rm -rf llama.cpp
+        git clone --depth=1 https://github.com/ggerganov/llama.cpp.git
+        cd llama.cpp
+        cmake -B build -DLLAMA_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=87 \
+              -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --config Release -j4
+        cp build/bin/llama-server /usr/local/bin/ 2>/dev/null || true
+        cp build/bin/llama-quantize /usr/local/bin/ 2>/dev/null || true
+      when: not llama_bin.stat.exists
+      async: 600   # build takes ~5 minutes
+      poll: 30
+
+    - name: Deploy model registry
+      copy:
+        src: "{{ playbook_dir }}/../../config/llm/model_registry.json"
+        dest: /opt/bubo/models/registry.json
+        owner: brain mode: "0644"
+
+    - name: Deploy LLM systemd service (pfc-l)
+      copy:
+        dest: /etc/systemd/system/bubo-llm.service
+        content: |
+          [Unit]
+          Description=Bubo Edge-LLM (13B Q2 Adaptive)
+          After=network.target bubo-pfc_l.service
+          [Service]
+          Type=simple
+          User=brain
+          Environment=PYTHONPATH=/opt/bubo
+          ExecStart=/usr/bin/python3 -m bubo.nodes.llm.llm_node
+          Restart=on-failure
+          RestartSec=10s
+          [Install]
+          WantedBy=multi-user.target
+      when: inventory_hostname == 'pfc-l'
+
+    - name: Enable LLM service
+      systemd:
+        name: bubo-llm
+        enabled: yes
+        state: started
+        daemon_reload: yes
+      when: inventory_hostname == 'pfc-l'
+      ignore_errors: yes

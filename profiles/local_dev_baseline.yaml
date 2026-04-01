@@ -1,0 +1,46 @@
+# profiles/local_dev_baseline.yaml — Bubo v1.0
+# Generic local development baseline profile.
+#
+# Hardware: Local Linux/WSL2 environment (No GPIO/Servos).
+# Use when: Local development, testing, and baseline research.
+# LLM:      Configurable via /etc/bubo/llm_config.json.
+# Cost:     Infrastructure $0/hr.
+
+name:        local_dev_baseline
+description: "Local development and research baseline"
+version:     "1.0"
+substrate:   local
+gender:      neutral
+instance_name: Bubo Research Node
+
+# ── LLM Configuration ────────────────────────────────────────────────────────
+llm:
+  backend:              anthropic
+  daily_spend_limit_usd: 10.0
+  # API key source: BUBO_ANTHROPIC_API_KEY environment variable
+
+# ── Hardware (Simulated — No physical I/O) ───────────────────────────────────
+hardware:
+  servos:           false
+  gpio:             false
+  galvanic_barrier: false
+  vagus_nerve:      false
+  stm32:            false
+  preempt_rt:       false
+  sim_mode:         true
+
+# ── Node config (Single node — gateway runs cognitive tier) ──────────────────
+nodes:
+  gateway:
+    port:     8443
+    instance: local
+    role:     gateway
+
+# ── Network ──────────────────────────────────────────────────────────────────
+network:
+  nat_gateway:     false
+  placement_group: false
+
+# ── Notes ────────────────────────────────────────────────────────────────────
+# Baseline configuration for neuromorphic research. 
+# Optimized for Ubuntu 24.04 LTS environments.

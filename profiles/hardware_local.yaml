@@ -1,0 +1,66 @@
+---
+# profiles/hardware_local.yaml
+# Profile 1 — Hardware cluster + Local 70B LLM on AGX Orin 64GB
+#
+# Use when: building the full physical robot with maximum cognitive quality.
+# LLM:     Llama-3-70B Q4_K_M running on AGX Orin 64GB (192.168.1.20)
+# Nodes:   21 Jetson nodes on 192.168.1.x network
+# Cost:    ~$5,937 one-time hardware BOM, zero per-query API cost
+
+name:        hardware_local
+description: "Physical Jetson cluster with AGX Orin 70B local LLM"
+version:     "9000"
+substrate:   hardware        # hardware | aws
+
+# ── LLM Configuration ────────────────────────────────────────────────────────
+llm:
+  backend:       local_70b   # local_70b | local_13b | anthropic | openai | auto
+  endpoint:      "http://192.168.1.20:8080"
+  model:         "Meta-Llama-3-70B-Instruct-Q4_K_M.gguf"
+  has_agx_node:  true
+  fallback:      local_13b   # if 70B unreachable, fall back to 13B on social node
+  fallback_endpoint: "http://192.168.1.19:8081"
+
+# ── Hardware flags ───────────────────────────────────────────────────────────
+hardware:
+  servos:        true    # Dynamixel servo bus active
+  gpio:          true    # BeagleBoard GPIO active
+  galvanic_barrier: true
+  vagus_nerve:   true    # hardware kill switch
+  stm32:         true    # STM32H7 co-processor
+  preempt_rt:    true    # PREEMPT_RT kernel required
+
+# ── Node network map ─────────────────────────────────────────────────────────
+nodes:
+  pfc_l:          { ip: 192.168.1.10, port: 5600, hw: "Orin 8GB",  tier: 7, role: prefrontal_l }
+  pfc_r:          { ip: 192.168.1.11, port: 5601, hw: "Orin 8GB",  tier: 7, role: prefrontal_r }
+  hypothalamus:   { ip: 192.168.1.12, port: 5602, hw: "Orin 8GB",  tier: 1, role: hypothalamus }
+  thalamus_l:     { ip: 192.168.1.13, port: 5603, hw: "Orin 8GB",  tier: 1, role: thalamus_l }
+  broca:          { ip: 192.168.1.14, port: 5604, hw: "Orin 8GB",  tier: 6, role: broca }
+  insula:         { ip: 192.168.1.15, port: 5605, hw: "Orin 8GB",  tier: 1, role: insula }
+  thalamus_r:     { ip: 192.168.1.18, port: 5608, hw: "Orin 8GB",  tier: 1, role: thalamus_r }
+  social:         { ip: 192.168.1.19, port: 5609, hw: "Orin 8GB",  tier: 5, role: social }
+  agx_llm:        { ip: 192.168.1.20, port: 5699, hw: "AGX 64GB",  tier: 7, role: llm }
+  hippocampus:    { ip: 192.168.1.30, port: 5620, hw: "Nano 4GB",  role: hippocampus }
+  amygdala:       { ip: 192.168.1.31, port: 5621, hw: "Nano 4GB",  role: amygdala }
+  cerebellum:     { ip: 192.168.1.32, port: 5640, hw: "Nano 4GB",  role: cerebellum }
+  basal_ganglia:  { ip: 192.168.1.33, port: 5641, hw: "Nano 4GB",  role: basal_ganglia }
+  association:    { ip: 192.168.1.34, port: 5642, hw: "Nano 4GB",  role: association }
+  ltm:            { ip: 192.168.1.35, port: 5643, hw: "Nano 4GB",  role: ltm }
+  visual:         { ip: 192.168.1.50, port: 5630, hw: "Nano 2GB",  role: visual }
+  auditory:       { ip: 192.168.1.51, port: 5631, hw: "Nano 2GB",  role: auditory }
+  somatosensory:  { ip: 192.168.1.52, port: 5632, hw: "Nano 2GB",  role: somatosensory }
+  spinal_arms:    { ip: 192.168.1.53, port: 5633, hw: "Nano 2GB",  role: spinal_arms }
+  sup_colliculus: { ip: 192.168.1.60, port: 5610, hw: "BeagleBoard", role: sup_colliculus }
+  spinal_legs:    { ip: 192.168.1.61, port: 5611, hw: "BeagleBoard", role: spinal_legs }
+
+# ── Network ─────────────────────────────────────────────────────────────────
+network:
+  subnet: 192.168.1.0/24
+  switch_ip: 192.168.1.1
+  vlans: [10, 20, 30, 40]
+  ptp_sync: true
+
+# Gender and identity
+gender: male
+instance_name: Bubo Adam

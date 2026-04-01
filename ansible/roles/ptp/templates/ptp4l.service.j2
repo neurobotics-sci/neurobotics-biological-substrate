@@ -1,0 +1,13 @@
+[Unit]
+Description=PTP Ordinary Clock — Bubo v50.0
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/ptp4l -f /etc/linuxptp/ptp4l.conf -i {{ ansible_default_ipv4.interface }} -m
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

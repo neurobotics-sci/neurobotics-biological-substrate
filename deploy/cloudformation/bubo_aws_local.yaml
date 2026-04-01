@@ -1,0 +1,242 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Bubo V10 — aws_local profile: 6 EC2 instances including g5.12xlarge for 70B LLM.
+  ~$7.15/hr on-demand | ~$2.14/hr spot. Use cost_control.sh to stop when idle.
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: bubo-prod
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+  LLMInstanceType:
+    Type: String
+    Default: g5.12xlarge
+    AllowedValues: [g5.12xlarge, g4dn.12xlarge, g5.48xlarge]
+    Description: GPU instance for 70B LLM (g5.12xlarge recommended)
+  AllowedCIDR:
+    Type: String
+    Default: 0.0.0.0/0
+
+Mappings:
+  RegionAMI:
+    us-east-1:      {Ubuntu22: ami-0c7217cdde317cfec}
+    us-west-2:      {Ubuntu22: ami-0efcece6bed30fd98}
+    eu-west-1:      {Ubuntu22: ami-0d64bb532e0502c46}
+    ap-southeast-1: {Ubuntu22: ami-078c1149d8ad719a7}
+
+Resources:
+  BuboVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.10.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags: [{Key: Name, Value: !Sub "${EnvironmentName}-vpc"}, {Key: Project, Value: Bubo}]
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties: {VpcId: !Ref BuboVPC, CidrBlock: 10.10.1.0/24, MapPublicIpOnLaunch: true, AvailabilityZone: !Select [0, !GetAZs '']}
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties: {VpcId: !Ref BuboVPC, CidrBlock: 10.10.2.0/24, AvailabilityZone: !Select [0, !GetAZs '']}
+
+  IGW:
+    Type: AWS::EC2::InternetGateway
+  IGWAttach:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: {VpcId: !Ref BuboVPC, InternetGatewayId: !Ref IGW}
+  NATEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: IGWAttach
+  NATGW:
+    Type: AWS::EC2::NatGateway
+    Properties: {AllocationId: !GetAtt NATEIP.AllocationId, SubnetId: !Ref PublicSubnet}
+  PublicRT:
+    Type: AWS::EC2::RouteTable
+    Properties: {VpcId: !Ref BuboVPC}
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: IGWAttach
+    Properties: {RouteTableId: !Ref PublicRT, DestinationCidrBlock: 0.0.0.0/0, GatewayId: !Ref IGW}
+  PublicRTAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: {SubnetId: !Ref PublicSubnet, RouteTableId: !Ref PublicRT}
+  PrivateRT:
+    Type: AWS::EC2::RouteTable
+    Properties: {VpcId: !Ref BuboVPC}
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties: {RouteTableId: !Ref PrivateRT, DestinationCidrBlock: 0.0.0.0/0, NatGatewayId: !Ref NATGW}
+  PrivateRTAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: {SubnetId: !Ref PrivateSubnet, RouteTableId: !Ref PrivateRT}
+
+  InternalSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Bubo internal traffic
+      VpcId: !Ref BuboVPC
+      SecurityGroupIngress:
+        - {IpProtocol: tcp, FromPort: 5599, ToPort: 5700, CidrIp: 10.10.0.0/16}
+        - {IpProtocol: tcp, FromPort: 8080, ToPort: 8080, CidrIp: 10.10.0.0/16}
+        - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: 10.10.0.0/16}
+  GatewaySG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Bubo public API
+      VpcId: !Ref BuboVPC
+      SecurityGroupIngress:
+        - {IpProtocol: tcp, FromPort: 443,  ToPort: 443,  CidrIp: !Ref AllowedCIDR}
+        - {IpProtocol: tcp, FromPort: 8443, ToPort: 8443, CidrIp: !Ref AllowedCIDR}
+        - {IpProtocol: tcp, FromPort: 22,   ToPort: 22,   CidrIp: !Ref AllowedCIDR}
+
+  BuboRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${EnvironmentName}-role-local
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement: [{Effect: Allow, Principal: {Service: ec2.amazonaws.com}, Action: sts:AssumeRole}]
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+      Policies:
+        - PolicyName: BuboS3SSM
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [ssm:GetParameter, ssm:GetParameters, s3:GetObject]
+                Resource: ["*"]
+
+  BuboInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties: {Roles: [!Ref BuboRole]}
+  PlacementGroup:
+    Type: AWS::EC2::PlacementGroup
+    Properties: {Strategy: cluster}
+  EFS:
+    Type: AWS::EFS::FileSystem
+    Properties: {PerformanceMode: generalPurpose, ThroughputMode: elastic, Encrypted: true}
+  EFSMount:
+    Type: AWS::EFS::MountTarget
+    Properties: {FileSystemId: !Ref EFS, SubnetId: !Ref PrivateSubnet, SecurityGroups: [!GetAtt InternalSG.GroupId]}
+
+  GatewayInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.medium
+      KeyName: !Ref KeyPairName
+      ImageId: !FindInMap [RegionAMI, !Ref AWS::Region, Ubuntu22]
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds: [!GetAtt InternalSG.GroupId, !GetAtt GatewaySG.GroupId]
+      IamInstanceProfile: !Ref BuboInstanceProfile
+      Tags: [{Key: Name, Value: !Sub "${EnvironmentName}-gateway"}, {Key: Project, Value: Bubo}, {Key: BuboRole, Value: gateway}, {Key: BuboEnvironment, Value: !Ref EnvironmentName}]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          export BUBO_NODE=gateway BUBO_ENV=${EnvironmentName} BUBO_PROFILE=aws_local BUBO_LLM_BACKEND=local_70b
+          curl -fsSL https://raw.githubusercontent.com/bubo-brain/bubo/main/deploy/scripts/bootstrap.sh | bash
+
+  LimbicInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: c6i.xlarge
+      KeyName: !Ref KeyPairName
+      ImageId: !FindInMap [RegionAMI, !Ref AWS::Region, Ubuntu22]
+      SubnetId: !Ref PrivateSubnet
+      SecurityGroupIds: [!GetAtt InternalSG.GroupId]
+      IamInstanceProfile: !Ref BuboInstanceProfile
+      Tags: [{Key: Name, Value: !Sub "${EnvironmentName}-limbic"}, {Key: Project, Value: Bubo}, {Key: BuboRole, Value: limbic}, {Key: BuboEnvironment, Value: !Ref EnvironmentName}]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          export BUBO_NODE=limbic BUBO_ENV=${EnvironmentName} BUBO_PROFILE=aws_local
+          curl -fsSL https://raw.githubusercontent.com/bubo-brain/bubo/main/deploy/scripts/bootstrap.sh | bash
+
+  MemoryInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: r6i.xlarge
+      KeyName: !Ref KeyPairName
+      ImageId: !FindInMap [RegionAMI, !Ref AWS::Region, Ubuntu22]
+      SubnetId: !Ref PrivateSubnet
+      SecurityGroupIds: [!GetAtt InternalSG.GroupId]
+      IamInstanceProfile: !Ref BuboInstanceProfile
+      Tags: [{Key: Name, Value: !Sub "${EnvironmentName}-memory"}, {Key: Project, Value: Bubo}, {Key: BuboRole, Value: memory}, {Key: BuboEnvironment, Value: !Ref EnvironmentName}]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          export BUBO_NODE=memory BUBO_ENV=${EnvironmentName} BUBO_PROFILE=aws_local EFS_ID=${EFS}
+          curl -fsSL https://raw.githubusercontent.com/bubo-brain/bubo/main/deploy/scripts/bootstrap.sh | bash
+
+  SocialInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: c6i.2xlarge
+      KeyName: !Ref KeyPairName
+      ImageId: !FindInMap [RegionAMI, !Ref AWS::Region, Ubuntu22]
+      SubnetId: !Ref PrivateSubnet
+      SecurityGroupIds: [!GetAtt InternalSG.GroupId]
+      IamInstanceProfile: !Ref BuboInstanceProfile
+      Tags: [{Key: Name, Value: !Sub "${EnvironmentName}-social"}, {Key: Project, Value: Bubo}, {Key: BuboRole, Value: social}, {Key: BuboEnvironment, Value: !Ref EnvironmentName}]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          export BUBO_NODE=social BUBO_ENV=${EnvironmentName} BUBO_PROFILE=aws_local
+          curl -fsSL https://raw.githubusercontent.com/bubo-brain/bubo/main/deploy/scripts/bootstrap.sh | bash
+
+  CortexInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: c6i.4xlarge
+      KeyName: !Ref KeyPairName
+      ImageId: !FindInMap [RegionAMI, !Ref AWS::Region, Ubuntu22]
+      SubnetId: !Ref PrivateSubnet
+      SecurityGroupIds: [!GetAtt InternalSG.GroupId]
+      IamInstanceProfile: !Ref BuboInstanceProfile
+      Tags: [{Key: Name, Value: !Sub "${EnvironmentName}-cortex"}, {Key: Project, Value: Bubo}, {Key: BuboRole, Value: cortex}, {Key: BuboEnvironment, Value: !Ref EnvironmentName}]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          export BUBO_NODE=cortex BUBO_ENV=${EnvironmentName} BUBO_PROFILE=aws_local BUBO_LLM_BACKEND=local_70b
+          curl -fsSL https://raw.githubusercontent.com/bubo-brain/bubo/main/deploy/scripts/bootstrap.sh | bash
+
+  LLMInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref LLMInstanceType
+      KeyName: !Ref KeyPairName
+      ImageId: !FindInMap [RegionAMI, !Ref AWS::Region, Ubuntu22]
+      SubnetId: !Ref PrivateSubnet
+      SecurityGroupIds: [!GetAtt InternalSG.GroupId]
+      IamInstanceProfile: !Ref BuboInstanceProfile
+      PlacementGroupName: !Ref PlacementGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs: {VolumeSize: 200, VolumeType: gp3, Iops: 4000}
+      Tags: [{Key: Name, Value: !Sub "${EnvironmentName}-llm"}, {Key: Project, Value: Bubo}, {Key: BuboRole, Value: llm}, {Key: BuboEnvironment, Value: !Ref EnvironmentName}]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          export BUBO_NODE=llm BUBO_ENV=${EnvironmentName} BUBO_PROFILE=aws_local BUBO_GPU=true
+          curl -fsSL https://raw.githubusercontent.com/bubo-brain/bubo/main/deploy/scripts/bootstrap.sh | bash
+
+  GatewayEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref GatewayInstance
+
+Outputs:
+  GatewayPublicIP:
+    Value: !Ref GatewayEIP
+  APIEndpoint:
+    Value: !Sub https://${GatewayEIP}/api/v1
+  LLMInstanceId:
+    Value: !Ref LLMInstance
+    Description: Stop this instance first to save money
+  CostEstimate:
+    Value: "~$7.15/hr on-demand | stop LLM instance when idle to save $5.67/hr"
+  DeployCommand:
+    Value: !Sub "./deploy/deploy.sh aws_local --env ${EnvironmentName}"

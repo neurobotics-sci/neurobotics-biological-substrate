@@ -1,0 +1,87 @@
+---
+# deploy/ansible/roles/llm_local/tasks/main.yml
+# Deploy llama-server for local 70B inference.
+# Used by: hardware_local (AGX Orin 64GB) and aws_local (g5.12xlarge)
+
+- name: Install build tools
+  apt:
+    name: [cmake, git, build-essential, curl]
+    state: present
+
+- name: Detect CUDA architecture
+  shell: |
+    python3 -c "import subprocess; r=subprocess.run(['nvidia-smi','--query-gpu=compute_cap','--format=csv,noheader'],capture_output=True,text=True); arch=r.stdout.strip().replace('.',''); print(arch if arch else '87')"
+  register: cuda_arch
+  changed_when: false
+  ignore_errors: true
+
+- name: Clone llama.cpp
+  git:
+    repo: https://github.com/ggerganov/llama.cpp.git
+    dest: /opt/llama.cpp
+    depth: 1
+  become_user: brain
+
+- name: Build llama.cpp with CUDA
+  shell: |
+    cd /opt/llama.cpp
+    cmake -B build \
+      -DLLAMA_CUDA=ON \
+      -DCMAKE_CUDA_ARCHITECTURES="{{ cuda_arch.stdout | default('87') }}" \
+      -DLLAMA_CUDA_F16=ON \
+      -DCMAKE_BUILD_TYPE=Release
+    cmake --build build -j$(nproc)
+    cp build/bin/llama-server /usr/local/bin/
+  args:
+    creates: /usr/local/bin/llama-server
+  become_user: brain
+  async: 1800
+  poll: 30
+
+- name: Check model file
+  stat:
+    path: "{{ bubo_model_dir }}/Meta-Llama-3-70B-Instruct-Q4_K_M.gguf"
+  register: model_stat
+
+- name: Download model from HuggingFace (if not present)
+  shell: |
+    pip3 install huggingface-hub --break-system-packages -q
+    huggingface-cli download bartowski/Meta-Llama-3-70B-Instruct-GGUF \
+      Meta-Llama-3-70B-Instruct-Q4_K_M.gguf \
+      --local-dir {{ bubo_model_dir }}/
+  when: not model_stat.stat.exists
+  become_user: brain
+  async: 7200
+  poll: 60
+
+- name: Deploy llama-server service
+  copy:
+    dest: /etc/systemd/system/bubo-llm.service
+    content: |
+      [Unit]
+      Description=Bubo LLM Server (70B Local)
+      After=network.target
+      [Service]
+      Type=simple
+      User=brain
+      ExecStart=/usr/local/bin/llama-server \
+        --model {{ bubo_model_dir }}/Meta-Llama-3-70B-Instruct-Q4_K_M.gguf \
+        --n-gpu-layers 99 --ctx-size 2048 --threads 12 \
+        --batch-size 512 --port 8080 --host 0.0.0.0 --mlock --log-disable
+      Restart=on-failure
+      RestartSec=30
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Enable and start LLM service
+  systemd:
+    name: bubo-llm
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Set BUBO_LLM_BACKEND for all nodes
+  lineinfile:
+    path: /etc/bubo/env
+    line: "BUBO_LLM_BACKEND=local_70b"
+    create: true

@@ -1,0 +1,41 @@
+# config/vlan/switch_config.txt — Bubo v50.0
+# IEEE 802.1Q VLAN configuration
+# Target switch: any managed 802.1Q switch (e.g. Netgear GS724TPv3, TP-Link TL-SG2428P)
+#
+# VLAN definitions:
+#   VLAN 10 — High-Road (Logic/Deliberative)  CoS 5
+#   VLAN 20 — Low-Road  (Reflex/Fast)          CoS 7  ← strict priority
+#   VLAN 30 — Neuromodulators (Slow drift)     CoS 2
+#   VLAN 40 — Management (SSH/Ansible/PTP)     CoS 3  ← native/untagged
+#
+# Port assignments (24-port switch):
+#   Port  1:  pfc-l         (192.168.1.10)  Tagged: 10,40   Untagged: 40
+#   Port  2:  pfc-r         (192.168.1.11)  Tagged: 10,40   Untagged: 40
+#   Port  3:  hypothalamus  (192.168.1.12)  Tagged: 30,40   Untagged: 40
+#   Port  4:  thalamus-l    (192.168.1.13)  Tagged: 10,20,40 Untagged: 40
+#   Port  5:  broca         (192.168.1.14)  Tagged: 10,40   Untagged: 40
+#   Port  6:  insula        (192.168.1.15)  Tagged: 10,20,40 Untagged: 40
+#   Port  7:  parietal      (192.168.1.16)  Tagged: 10,40   Untagged: 40
+#   Port  8:  cingulate     (192.168.1.17)  Tagged: 10,40   Untagged: 40
+#   Port  9:  thalamus-r    (192.168.1.18)  Tagged: 10,20,40 Untagged: 40  ★NEW
+#   Port 10:  social        (192.168.1.19)  Tagged: 10,40   Untagged: 40  ★NEW
+#   Port 11:  hippocampus   (192.168.1.30)  Tagged: 10,40   Untagged: 40
+#   Port 12:  amygdala      (192.168.1.31)  Tagged: 20,40   Untagged: 40
+#   Port 13:  cerebellum    (192.168.1.32)  Tagged: 20,40   Untagged: 40
+#   Port 14:  basal-ganglia (192.168.1.33)  Tagged: 10,40   Untagged: 40
+#   Port 15:  association   (192.168.1.34)  Tagged: 10,40   Untagged: 40
+#   Port 16:  ltm-store     (192.168.1.35)  Tagged: 10,40   Untagged: 40
+#   Port 17:  visual        (192.168.1.50)  Tagged: 10,40   Untagged: 40
+#   Port 18:  auditory      (192.168.1.51)  Tagged: 20,40   Untagged: 40
+#   Port 19:  somatosensory (192.168.1.52)  Tagged: 20,40   Untagged: 40
+#   Port 20:  spinal-arms   (192.168.1.53)  Tagged: 20,40   Untagged: 40
+#   Port 21:  sup-colliculus(192.168.1.60)  Tagged: 20,40   Untagged: 40
+#   Port 22:  spinal-legs   (192.168.1.61)  Tagged: 20,40   Untagged: 40
+#   Port 23:  UPLINK/trunk  (blueraven)     Tagged: 10,20,30,40
+#   Port 24:  spare
+#
+# Queue scheduling (per-port DSCP/CoS mapping):
+#   CoS 7 (VLAN 20 reflex) → Queue 3: Strict Priority (never yielded)
+#   CoS 5 (VLAN 10 logic)  → Queue 2: WFQ 60%
+#   CoS 3 (VLAN 40 mgmt)   → Queue 1: WFQ 30%
+#   CoS 2 (VLAN 30 neuro)  → Queue 0: WFQ 10%

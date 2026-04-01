@@ -1,0 +1,132 @@
+---
+# deploy/ansible/roles/common/tasks/main.yml
+# Bootstrap tasks applied to every node in every profile.
+
+- name: Update apt cache
+  apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install system packages
+  apt:
+    name:
+      - python3-pip
+      - python3-venv
+      - python3-dev
+      - build-essential
+      - git
+      - curl
+      - wget
+      - htop
+      - tmux
+      - libzmq3-dev
+      - libssl-dev
+      - ntp
+    state: present
+
+- name: Create brain user
+  user:
+    name: brain
+    shell: /bin/bash
+    create_home: true
+    groups: [sudo]
+    append: true
+
+- name: Create directory structure
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: brain
+    mode: '0755'
+  loop:
+    - "{{ bubo_home }}"
+    - "{{ bubo_home }}/data"
+    - "{{ bubo_home }}/models"
+    - "{{ bubo_home }}/logs"
+    - /etc/bubo
+    - /etc/bubo/tls
+    - /etc/bubo/secrets
+    - /var/log/bubo
+
+- name: Check if GitHub is reachable
+  uri:
+    url: https://github.com/bubo-brain/bubo
+    method: GET
+    timeout: 10
+    status_code: [200, 301, 302, 404]
+  register: github_check
+  ignore_errors: true
+
+- name: Clone Bubo repository (GitHub)
+  git:
+    repo: https://github.com/bubo-brain/bubo.git
+    dest: "{{ bubo_home }}/src"
+    version: main
+    depth: 1
+    force: true
+  become_user: brain
+  when: github_check is succeeded and github_check.status in [200, 301, 302]
+  ignore_errors: true
+
+- name: Copy Bubo repository (local fallback — pre-launch)
+  synchronize:
+    src: "{{ playbook_dir }}/../../../"
+    dest: "{{ bubo_home }}/src/"
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=__pycache__"
+      - "--exclude=*.pyc"
+      - "--exclude=*.tar.gz"
+  when: github_check is failed or github_check.status not in [200, 301, 302]
+  ignore_errors: true
+
+- name: Create Python virtualenv
+  command:
+    cmd: python3 -m venv {{ bubo_venv }}
+    creates: "{{ bubo_venv }}/bin/activate"
+  become_user: brain
+
+- name: Install Python dependencies
+  pip:
+    name:
+      - pyzmq>=25.0
+      - msgpack>=1.0
+      - numpy>=1.24
+      - scipy>=1.10
+      - pyyaml>=6.0
+      - requests>=2.28
+    virtualenv: "{{ bubo_venv }}"
+  become_user: brain
+
+- name: Install Bubo package (editable)
+  pip:
+    name: "{{ bubo_home }}/src"
+    virtualenv: "{{ bubo_venv }}"
+    editable: true
+  become_user: brain
+  ignore_errors: true
+
+- name: Write node identity
+  copy:
+    dest: /etc/bubo/identity
+    content: |
+      BUBO_ROLE={{ bubo_role | default('unknown') }}
+      BUBO_PROFILE={{ bubo_profile }}
+      BUBO_VERSION={{ bubo_version | default('9000') }}
+    owner: brain
+    mode: '0644'
+
+- name: Write BUBO_PROFILE to environment
+  lineinfile:
+    path: /etc/bubo/env
+    line: "BUBO_PROFILE={{ bubo_profile }}"
+    create: true
+
+- name: Generate self-signed TLS certificate
+  command: >
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048
+    -keyout /etc/bubo/tls/key.pem
+    -out /etc/bubo/tls/cert.pem
+    -subj "/CN=bubo.local/O=Bubo/C=US"
+  args:
+    creates: /etc/bubo/tls/cert.pem

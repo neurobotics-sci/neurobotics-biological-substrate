@@ -1,0 +1,57 @@
+---
+# profiles/aws_api.yaml
+# Profile 4 — AWS EC2 cluster + Claude API (no GPU instance)
+#
+# Use when: cloud demo/dev/moderate production. Cheapest AWS deployment.
+# LLM:     Claude Sonnet/Haiku via Anthropic API
+# Nodes:   5 EC2 instances (no GPU node)
+# Cost:    ~$1.48/hr infra + ~$0.50/day API = ~$36/day total
+#          vs $171/day for aws_local — 79% cheaper
+
+name:        aws_api
+description: "AWS EC2 cluster with Claude API LLM (no GPU instance)"
+version:     "9000"
+substrate:   aws
+
+# ── LLM Configuration ────────────────────────────────────────────────────────
+llm:
+  backend:       anthropic
+  model_sonnet:  "claude-sonnet-4-6"
+  model_haiku:   "claude-haiku-4-5-20251001"
+  has_gpu_node:  false
+  # API key stored in SSM Parameter Store (SecureString, never plaintext)
+  api_key_ssm:   "/bubo/{env}/anthropic_api_key"
+  daily_spend_limit_usd: 20.0
+  fallback:      local_13b_optional  # only if fallback instance deployed
+
+# ── Hardware flags ────────────────────────────────────────────────────────────
+hardware:
+  servos:           false
+  gpio:             false
+  galvanic_barrier: false
+  vagus_nerve:      false
+  stm32:            false
+  preempt_rt:       false
+
+# ── Node configuration (5 nodes — no GPU) ────────────────────────────────────
+nodes:
+  gateway:  { port: 5599, instance: "t3.medium",   role: gateway }
+  limbic:   { port: 5621, instance: "c6i.xlarge",  role: limbic }
+  memory:   { port: 5643, instance: "r6i.xlarge",  role: memory }
+  social:   { port: 5609, instance: "c6i.2xlarge", role: social }
+  cortex:   { port: 5600, instance: "c6i.4xlarge", role: cortex }
+
+network:
+  vpc_cidr:  "10.10.0.0/16"
+  nat_gateway: true    # CRITICAL: private nodes must reach api.anthropic.com
+  placement_group: cluster
+
+aws:
+  region:       "${AWS_DEFAULT_REGION}"
+  stack_name:   "bubo-prod-api"
+  cfn_template: "deploy/cloudformation/bubo_aws_api.yaml"
+  efs_ltm:      true
+
+# Gender and identity
+gender: male
+instance_name: Bubo Adam

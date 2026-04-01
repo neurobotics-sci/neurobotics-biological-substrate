@@ -1,0 +1,48 @@
+---
+# deploy/ansible/roles/gateway/tasks/main.yml
+# Deploy Bubo Cloud API gateway (aws_local and aws_api profiles).
+
+- name: Install Flask + SocketIO
+  pip:
+    name:
+      - flask>=3.0
+      - flask-socketio>=5.3
+      - eventlet>=0.33
+      - gunicorn>=21.0
+    virtualenv: "{{ bubo_venv }}"
+  become_user: brain
+
+- name: Deploy gateway systemd service
+  copy:
+    dest: /etc/systemd/system/bubo-gateway.service
+    content: |
+      [Unit]
+      Description=Bubo Cloud API Gateway
+      After=network.target
+      [Service]
+      Type=simple
+      User=brain
+      WorkingDirectory={{ bubo_home }}/src
+      EnvironmentFile=/etc/bubo/env
+      Environment=GATEWAY_PORT=443
+      Environment=TLS_CERT=/etc/bubo/tls/cert.pem
+      Environment=TLS_KEY=/etc/bubo/tls/key.pem
+      ExecStart={{ bubo_venv }}/bin/python -m bubo.cloud.gateway
+      Restart=on-failure
+      RestartSec=10
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Enable and start gateway
+  systemd:
+    name: bubo-gateway
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Wait for gateway to start
+  wait_for:
+    port: 443
+    host: "{{ ansible_host }}"
+    timeout: 30
+  ignore_errors: true

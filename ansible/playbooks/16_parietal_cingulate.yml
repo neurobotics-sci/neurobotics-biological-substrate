@@ -1,0 +1,37 @@
+---
+- name: "Bubo v50.0 — 16_parietal_cingulate"
+  hosts: parietal:cingulate
+  become: true
+  tasks:
+    - name: Create dirs
+      file: path={{ item }} state=directory owner=brain mode=0755
+      loop: ["/opt/bubo","/opt/bubo/data","/var/log/bubo","/etc/bubo"]
+    - name: Deploy source
+      synchronize:
+        src: "{{ playbook_dir }}/../../"
+        dest: /opt/bubo/
+        rsync_opts: ["--exclude=.git","--exclude=__pycache__","--exclude=*.tar.gz","--exclude=*.db"]
+    - name: Deploy config
+      copy:
+        src: "{{ playbook_dir }}/../../config/cluster_config.json"
+        dest: /etc/bubo/config.json owner=brain mode=0644
+    - name: Install deps
+      pip:
+        requirements: /opt/bubo/requirements.txt
+        executable: pip3
+        extra_args: "--break-system-packages"
+      ignore_errors: yes
+    - name: Systemd service
+      template:
+        src: "{{ playbook_dir }}/../roles/brain_node/templates/bubo_service.j2"
+        dest: "/etc/systemd/system/bubo-{{ brain_role }}.service"
+      when: brain_role is defined
+      notify: reload systemd
+    - name: Enable service
+      systemd:
+        name: "bubo-{{ brain_role }}"
+        enabled: yes state=started daemon_reload=yes
+      when: brain_role is defined
+  handlers:
+    - name: reload systemd
+      systemd: daemon_reload=yes

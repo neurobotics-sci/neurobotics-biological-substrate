@@ -1,0 +1,70 @@
+---
+# profiles/hardware_api.yaml
+# Profile 2 — Hardware cluster + Claude API (no AGX Orin node)
+#
+# Use when: building the physical robot without the $999 AGX Orin node.
+# LLM:     Claude Sonnet/Haiku via Anthropic API
+# Nodes:   20 Jetson nodes (no agx_llm node)
+# Cost:    ~$4,938 hardware BOM + ~$0.50-5/day API cost
+# Requires: BUBO_ANTHROPIC_API_KEY environment variable or SSM
+
+name:        hardware_api
+description: "Physical Jetson cluster with Claude API LLM (no AGX Orin)"
+version:     "9000"
+substrate:   hardware
+
+# ── LLM Configuration ────────────────────────────────────────────────────────
+llm:
+  backend:       anthropic    # Primary: Claude API
+  model_sonnet:  "claude-sonnet-4-6"
+  model_haiku:   "claude-haiku-4-5-20251001"
+  has_agx_node:  false
+  fallback:      local_13b    # if API unreachable: 13B on social node
+  fallback_endpoint: "http://192.168.1.19:8081"
+  daily_spend_limit_usd: 20.0
+  # API key sources (checked in order):
+  #   1. BUBO_ANTHROPIC_API_KEY environment variable
+  #   2. /etc/bubo/secrets/anthropic_key (file, chmod 600)
+  #   3. AWS SSM: /bubo/prod/anthropic_api_key (if aws cli available)
+
+# ── Hardware flags (identical to hardware_local) ─────────────────────────────
+hardware:
+  servos:        true
+  gpio:          true
+  galvanic_barrier: true
+  vagus_nerve:   true
+  stm32:         true
+  preempt_rt:    true
+
+# ── Node network map (20 nodes — no agx_llm) ────────────────────────────────
+nodes:
+  pfc_l:          { ip: 192.168.1.10, port: 5600, hw: "Orin 8GB",  tier: 7, role: prefrontal_l }
+  pfc_r:          { ip: 192.168.1.11, port: 5601, hw: "Orin 8GB",  tier: 7, role: prefrontal_r }
+  hypothalamus:   { ip: 192.168.1.12, port: 5602, hw: "Orin 8GB",  tier: 1, role: hypothalamus }
+  thalamus_l:     { ip: 192.168.1.13, port: 5603, hw: "Orin 8GB",  tier: 1, role: thalamus_l }
+  broca:          { ip: 192.168.1.14, port: 5604, hw: "Orin 8GB",  tier: 6, role: broca }
+  insula:         { ip: 192.168.1.15, port: 5605, hw: "Orin 8GB",  tier: 1, role: insula }
+  thalamus_r:     { ip: 192.168.1.18, port: 5608, hw: "Orin 8GB",  tier: 1, role: thalamus_r }
+  social:         { ip: 192.168.1.19, port: 5609, hw: "Orin 8GB",  tier: 5, role: social }
+  # NOTE: no agx_llm node in this profile
+  hippocampus:    { ip: 192.168.1.30, port: 5620, hw: "Nano 4GB",  role: hippocampus }
+  amygdala:       { ip: 192.168.1.31, port: 5621, hw: "Nano 4GB",  role: amygdala }
+  cerebellum:     { ip: 192.168.1.32, port: 5640, hw: "Nano 4GB",  role: cerebellum }
+  basal_ganglia:  { ip: 192.168.1.33, port: 5641, hw: "Nano 4GB",  role: basal_ganglia }
+  association:    { ip: 192.168.1.34, port: 5642, hw: "Nano 4GB",  role: association }
+  ltm:            { ip: 192.168.1.35, port: 5643, hw: "Nano 4GB",  role: ltm }
+  visual:         { ip: 192.168.1.50, port: 5630, hw: "Nano 2GB",  role: visual }
+  auditory:       { ip: 192.168.1.51, port: 5631, hw: "Nano 2GB",  role: auditory }
+  somatosensory:  { ip: 192.168.1.52, port: 5632, hw: "Nano 2GB",  role: somatosensory }
+  spinal_arms:    { ip: 192.168.1.53, port: 5633, hw: "Nano 2GB",  role: spinal_arms }
+  sup_colliculus: { ip: 192.168.1.60, port: 5610, hw: "BeagleBoard", role: sup_colliculus }
+  spinal_legs:    { ip: 192.168.1.61, port: 5611, hw: "BeagleBoard", role: spinal_legs }
+
+network:
+  subnet: 192.168.1.0/24
+  vlans: [10, 20, 30, 40]
+  ptp_sync: true
+
+# Gender and identity
+gender: male
+instance_name: Bubo Adam

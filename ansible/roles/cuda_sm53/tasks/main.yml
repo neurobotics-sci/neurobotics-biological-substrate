@@ -1,0 +1,27 @@
+---
+- name: Deploy CUDA sm_53 environment
+  copy:
+    dest: /etc/profile.d/cuda_nano.sh
+    content: |
+      export CUDA_HOME=/usr/local/cuda
+      export PATH=$CUDA_HOME/bin:$PATH
+      export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+      export NVCCFLAGS="-O2 -arch=sm_53 -gencode arch=compute_53,code=sm_53 --use_fast_math"
+      export TORCH_CUDA_ARCH_LIST="5.3"
+      export OMP_NUM_THREADS=2
+      export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128
+      export PYTHONPATH=/opt/bubo
+    mode: "0644"
+
+- name: Set performance governor (Nano)
+  shell: |
+    for f in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+      echo performance > $f 2>/dev/null || true; done
+  changed_when: false
+
+- name: Smoke test
+  command: python3 -c "import torch; print('Nano CUDA:', torch.cuda.is_available())"
+  register: smoke
+  changed_when: false
+  ignore_errors: yes
+- debug: msg="{{ smoke.stdout }}"

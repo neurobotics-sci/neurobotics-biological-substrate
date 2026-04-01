@@ -1,0 +1,97 @@
+---
+# deploy/ansible/roles/llm_api/tasks/main.yml
+# Configure Claude API backend.
+# Used by: hardware_api and aws_api profiles.
+# No model download. No GPU. Just config + key.
+
+- name: Install requests library (for API calls)
+  pip:
+    name: [requests>=2.28, urllib3>=2.0]
+    virtualenv: "{{ bubo_venv }}"
+  become_user: brain
+
+- name: Resolve Anthropic API key
+  block:
+    - name: Check environment variable
+      shell: "echo ${BUBO_ANTHROPIC_API_KEY:-${ANTHROPIC_API_KEY:-}}"
+      register: env_key
+      changed_when: false
+
+    - name: Check SSM Parameter Store
+      shell: >
+        aws ssm get-parameter
+        --name /bubo/{{ env_name | default('prod') }}/anthropic_api_key
+        --with-decryption --query Parameter.Value --output text 2>/dev/null || true
+      register: ssm_key
+      changed_when: false
+      when: env_key.stdout | length == 0
+  rescue:
+    - name: API key not found warning
+      debug:
+        msg: >
+          WARNING: Anthropic API key not found.
+          Set BUBO_ANTHROPIC_API_KEY or store in SSM at
+          /bubo/{{ env_name | default('prod') }}/anthropic_api_key
+
+- name: Write API key to secrets file
+  copy:
+    dest: /etc/bubo/secrets/anthropic_key
+    content: "{{ env_key.stdout | default(ssm_key.stdout | default('')) }}"
+    owner: brain
+    mode: '0600'
+  when: (env_key.stdout | default('') | length > 0) or
+        (ssm_key.stdout | default('') | length > 0)
+  no_log: true
+
+- name: Create secrets directory
+  file:
+    path: /etc/bubo/secrets
+    state: directory
+    owner: brain
+    mode: '0700'
+
+- name: Write LLM backend config
+  copy:
+    dest: /etc/bubo/llm_config.yaml
+    owner: brain
+    mode: '0644'
+    content: |
+      backend: anthropic
+      model_sonnet: claude-sonnet-4-6
+      model_haiku: claude-haiku-4-5-20251001
+      daily_spend_limit_usd: {{ daily_spend_limit | default(20) }}
+      fallback: local_13b
+
+- name: Set BUBO_LLM_BACKEND in environment
+  lineinfile:
+    path: /etc/bubo/env
+    line: "BUBO_LLM_BACKEND=anthropic"
+    create: true
+
+- name: Set model names in environment
+  blockinfile:
+    path: /etc/bubo/env
+    block: |
+      BUBO_CLAUDE_MODEL_SONNET=claude-sonnet-4-6
+      BUBO_CLAUDE_MODEL_HAIKU=claude-haiku-4-5-20251001
+    create: true
+
+- name: Test API connectivity
+  shell: |
+    source /etc/bubo/env
+    KEY=$(cat /etc/bubo/secrets/anthropic_key 2>/dev/null || echo "")
+    if [ -n "$KEY" ]; then
+      curl -s -o /dev/null -w "%{http_code}" \
+        -H "x-api-key: $KEY" \
+        -H "anthropic-version: 2023-06-01" \
+        https://api.anthropic.com/v1/models | grep -q "200" && echo "API OK" || echo "API check failed"
+    else
+      echo "No API key — skipping test"
+    fi
+  register: api_test
+  changed_when: false
+  ignore_errors: true
+
+- name: API connectivity result
+  debug:
+    msg: "Anthropic API: {{ api_test.stdout | default('not tested') }}"

@@ -1,0 +1,35 @@
+---
+- name: Deploy CUDA sm_87 environment
+  copy:
+    dest: /etc/profile.d/cuda_orin.sh
+    content: |
+      export CUDA_HOME=/usr/local/cuda
+      export PATH=$CUDA_HOME/bin:$PATH
+      export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+      export NVCCFLAGS="-O3 -arch=sm_87 -gencode arch=compute_87,code=sm_87 --use_fast_math"
+      export TORCH_CUDA_ARCH_LIST="8.7"
+      export OMP_NUM_THREADS=4
+      export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:256
+      export PYTHONPATH=/opt/bubo
+    mode: "0644"
+
+- name: Set nvpmodel 15W
+  shell: nvpmodel -m 2 2>/dev/null || true
+  changed_when: false
+
+- name: jetson_clocks
+  shell: jetson_clocks 2>/dev/null || true
+  changed_when: false
+
+- name: Performance governor
+  shell: |
+    for f in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+      echo performance > $f 2>/dev/null || true; done
+  changed_when: false
+
+- name: Smoke test
+  command: python3 -c "import torch; print('Orin CUDA:', torch.cuda.is_available())"
+  register: smoke
+  changed_when: false
+  ignore_errors: yes
+- debug: msg="{{ smoke.stdout }}"

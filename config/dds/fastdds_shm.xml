@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- config/dds/fastdds_shm.xml — Bubo v50.0 (22 nodes) -->
+<!-- SHM 512MB + UDP fallback + Super-Client discovery (PFC-L primary, PFC-R backup) -->
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+
+  <transport_descriptors>
+    <transport_descriptor>
+      <transport_id>shm_brain</transport_id>
+      <type>SHM</type>
+      <segment_size>536870912</segment_size>   <!-- 512 MB -->
+      <port_queue_capacity>4096</port_queue_capacity>
+      <healthy_check_timeout_ms>100</healthy_check_timeout_ms>
+    </transport_descriptor>
+    <transport_descriptor>
+      <transport_id>udp_brain</transport_id>
+      <type>UDPv4</type>
+      <sendBufferSize>8388608</sendBufferSize>
+      <receiveBufferSize>8388608</receiveBufferSize>
+      <maxMessageSize>65500</maxMessageSize>
+      <TTL>1</TTL>
+      <non_blocking_send>true</non_blocking_send>
+    </transport_descriptor>
+  </transport_descriptors>
+
+  <!-- Discovery Server Primary (PFC-L) -->
+  <participant profile_name="ds_primary" is_default_profile="false">
+    <rtps>
+      <prefix>44.53.00.5f.45.50.52.4f.53.49.4d.41</prefix>
+      <builtin>
+        <discovery_config>
+          <discoveryProtocol>SERVER</discoveryProtocol>
+          <leaseDuration><sec>DURATION_INFINITY</sec></leaseDuration>
+          <metatrafficUnicastLocatorList>
+            <locator><udpv4><address>192.168.1.10</address><port>11811</port></udpv4></locator>
+          </metatrafficUnicastLocatorList>
+          <serversList>
+            <RemoteServer prefix="44.53.00.5f.45.50.52.4f.53.49.4d.42">
+              <metatrafficUnicastLocatorList>
+                <locator><udpv4><address>192.168.1.11</address><port>11811</port></udpv4></locator>
+              </metatrafficUnicastLocatorList>
+            </RemoteServer>
+          </serversList>
+        </discovery_config>
+        <metatrafficMulticastLocatorList/>
+      </builtin>
+      <useBuiltinTransports>false</useBuiltinTransports>
+      <userTransports>
+        <transport_id>shm_brain</transport_id>
+        <transport_id>udp_brain</transport_id>
+      </userTransports>
+    </rtps>
+  </participant>
+
+  <!-- Discovery Server Backup (PFC-R) -->
+  <participant profile_name="ds_backup" is_default_profile="false">
+    <rtps>
+      <prefix>44.53.00.5f.45.50.52.4f.53.49.4d.42</prefix>
+      <builtin>
+        <discovery_config>
+          <discoveryProtocol>BACKUP</discoveryProtocol>
+          <leaseDuration><sec>DURATION_INFINITY</sec></leaseDuration>
+          <metatrafficUnicastLocatorList>
+            <locator><udpv4><address>192.168.1.11</address><port>11811</port></udpv4></locator>
+          </metatrafficUnicastLocatorList>
+          <serversList>
+            <RemoteServer prefix="44.53.00.5f.45.50.52.4f.53.49.4d.41">
+              <metatrafficUnicastLocatorList>
+                <locator><udpv4><address>192.168.1.10</address><port>11811</port></udpv4></locator>
+              </metatrafficUnicastLocatorList>
+            </RemoteServer>
+          </serversList>
+        </discovery_config>
+        <metatrafficMulticastLocatorList/>
+      </builtin>
+      <useBuiltinTransports>false</useBuiltinTransports>
+      <userTransports>
+        <transport_id>shm_brain</transport_id>
+        <transport_id>udp_brain</transport_id>
+      </userTransports>
+    </rtps>
+  </participant>
+
+  <!-- Super-Client (all other 20 nodes) -->
+  <participant profile_name="brain_super_client" is_default_profile="true">
+    <rtps>
+      <builtin>
+        <discovery_config>
+          <discoveryProtocol>SUPER_CLIENT</discoveryProtocol>
+          <leaseDuration><sec>20</sec></leaseDuration>
+          <leaseDuration_announcementperiod><sec>5</sec></leaseDuration_announcementperiod>
+          <serversList>
+            <RemoteServer prefix="44.53.00.5f.45.50.52.4f.53.49.4d.41">
+              <metatrafficUnicastLocatorList>
+                <locator><udpv4><address>192.168.1.10</address><port>11811</port></udpv4></locator>
+              </metatrafficUnicastLocatorList>
+            </RemoteServer>
+            <RemoteServer prefix="44.53.00.5f.45.50.52.4f.53.49.4d.42">
+              <metatrafficUnicastLocatorList>
+                <locator><udpv4><address>192.168.1.11</address><port>11811</port></udpv4></locator>
+              </metatrafficUnicastLocatorList>
+            </RemoteServer>
+          </serversList>
+        </discovery_config>
+        <metatrafficMulticastLocatorList/>
+      </builtin>
+      <useBuiltinTransports>false</useBuiltinTransports>
+      <userTransports>
+        <transport_id>shm_brain</transport_id>
+        <transport_id>udp_brain</transport_id>
+      </userTransports>
+      <sendBufferSize>8388608</sendBufferSize>
+      <receiveBufferSize>8388608</receiveBufferSize>
+    </rtps>
+  </participant>
+
+  <!-- QoS profiles -->
+  <!-- VLAN 20: Reflex / pain / heartbeat — RELIABLE, strict deadline -->
+  <data_writer profile_name="qos_reflex">
+    <qos>
+      <reliability><kind>RELIABLE_RELIABILITY_QOS</kind></reliability>
+      <durability><kind>VOLATILE_DURABILITY_QOS</kind></durability>
+      <history><kind>KEEP_LAST_HISTORY_QOS</kind><depth>1</depth></history>
+      <deadline><period><nanosec>80000000</nanosec></period></deadline>
+      <latencyBudget><duration><nanosec>1000000</nanosec></duration></latencyBudget>
+    </qos>
+  </data_writer>
+
+  <!-- VLAN 20: Motor / HB — BEST_EFFORT, 0.5ms -->
+  <data_writer profile_name="qos_motor">
+    <qos>
+      <reliability><kind>BEST_EFFORT_RELIABILITY_QOS</kind></reliability>
+      <history><kind>KEEP_LAST_HISTORY_QOS</kind><depth>1</depth></history>
+      <latencyBudget><duration><nanosec>500000</nanosec></duration></latencyBudget>
+    </qos>
+  </data_writer>
+
+  <!-- VOR — ultra-low latency, BEST_EFFORT -->
+  <data_writer profile_name="qos_vor">
+    <qos>
+      <reliability><kind>BEST_EFFORT_RELIABILITY_QOS</kind></reliability>
+      <history><kind>KEEP_LAST_HISTORY_QOS</kind><depth>1</depth></history>
+      <latencyBudget><duration><nanosec>200000</nanosec></duration></latencyBudget>
+    </qos>
+  </data_writer>
+
+  <!-- VLAN 10: Logic / social — RELIABLE, 5ms budget -->
+  <data_writer profile_name="qos_logic">
+    <qos>
+      <reliability><kind>RELIABLE_RELIABILITY_QOS</kind></reliability>
+      <history><kind>KEEP_LAST_HISTORY_QOS</kind><depth>5</depth></history>
+      <latencyBudget><duration><nanosec>5000000</nanosec></duration></latencyBudget>
+    </qos>
+  </data_writer>
+
+  <!-- VLAN 30: Neuromodulators — RELIABLE, KEEP_LAST(5) -->
+  <data_writer profile_name="qos_neuromod">
+    <qos>
+      <reliability><kind>RELIABLE_RELIABILITY_QOS</kind></reliability>
+      <history><kind>KEEP_LAST_HISTORY_QOS</kind><depth>5</depth></history>
+      <deadline><period><sec>2</sec></period></deadline>
+    </qos>
+  </data_writer>
+
+</profiles>

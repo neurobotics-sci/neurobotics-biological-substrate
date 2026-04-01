@@ -1,0 +1,38 @@
+---
+# Bubo v1.0 — 21-Node Master Playbook (Sterile Research Platform)
+# NOTE: Tier 7 (PFC/LLM) is disabled to enforce consciousness-loop severing.
+
+- import_playbook: playbooks/00_preflight.yml
+- import_playbook: playbooks/01_common.yml
+- import_playbook: playbooks/02_vlan.yml
+- import_playbook: playbooks/03_ptp.yml
+- import_playbook: playbooks/04_dds.yml
+- import_playbook: playbooks/dds_partitions.yml
+- import_playbook: playbooks/05_cuda_sm87.yml
+- import_playbook: playbooks/05b_cuda_sm53.yml
+- import_playbook: playbooks/06_hypothalamus.yml
+- import_playbook: playbooks/07_thalamus_l.yml
+- import_playbook: playbooks/07b_thalamus_r.yml
+- import_playbook: playbooks/08_insula.yml
+- import_playbook: playbooks/10_limbic.yml
+- import_playbook: playbooks/11_memory.yml
+- import_playbook: playbooks/12_sensory.yml
+- import_playbook: playbooks/13_cerebellum.yml
+- import_playbook: playbooks/14_basal_ganglia.yml
+- import_playbook: playbooks/15_spinal.yml
+- import_playbook: playbooks/17_broca.yml
+- import_playbook: playbooks/09_social.yml
+
+# ─── THE OMNIVISION CUTOFF ───────────────────────────────────────────────────
+# The following Tier 7 nodes are disabled to prevent the initialization of 
+# the PFC/LLM consciousness loop. This ensures a sterile research environment.
+#
+# - import_playbook: playbooks/18_pfc.yml           # High-road logic SEVERED
+# - import_playbook: playbooks/llm_install.yml     # Cognitive engine SEVERED
+# - import_playbook: playbooks/agx_llm.yml         # 70B Oracle SEVERED
+# ─────────────────────────────────────────────────────────────────────────────
+
+- import_playbook: playbooks/vagus_nerve.yml        # Safety kill switch ACTIVE
+- import_playbook: playbooks/glial_cleanup.yml
+- import_playbook: playbooks/saccadic_masking.yml
+- import_playbook: playbooks/19_verify.yml

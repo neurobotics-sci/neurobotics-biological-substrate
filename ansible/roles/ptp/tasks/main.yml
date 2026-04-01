@@ -1,0 +1,50 @@
+---
+- name: Install linuxptp
+  apt:
+    name: [linuxptp, ethtool]
+    state: present
+    update_cache: yes
+
+- name: Disable chrony (conflicts with ptp4l)
+  systemd: name=chrony state=stopped enabled=no
+  ignore_errors: yes
+
+- name: Detect HW timestamping
+  command: ethtool -T {{ ansible_default_ipv4.interface }}
+  register: ts_caps
+  changed_when: false
+  ignore_errors: yes
+
+- name: Deploy ptp4l.conf
+  template:
+    src: ptp4l.conf.j2
+    dest: /etc/linuxptp/ptp4l.conf
+    owner: root mode: "0644"
+  notify: restart ptp4l
+
+- name: Deploy ptp4l.service
+  template:
+    src: ptp4l.service.j2
+    dest: /etc/systemd/system/ptp4l.service
+    owner: root mode: "0644"
+  notify: reload systemd
+
+- name: Deploy phc2sys.service (slaves)
+  template:
+    src: phc2sys.service.j2
+    dest: /etc/systemd/system/phc2sys.service
+  when: inventory_hostname != 'hypothalamus'
+  notify: reload systemd
+
+- name: Enable ptp4l
+  systemd: name=ptp4l enabled=yes state=started daemon_reload=yes
+
+- name: Enable phc2sys (slaves)
+  systemd: name=phc2sys enabled=yes state=started
+  when: inventory_hostname != 'hypothalamus'
+
+handlers:
+  - name: restart ptp4l
+    systemd: name=ptp4l state=restarted daemon_reload=yes
+  - name: reload systemd
+    systemd: daemon_reload=yes

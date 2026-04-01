@@ -1,0 +1,5 @@
+---
+# Thalamus-L: receives from ALL partitions (relay nucleus)
+node_vlan_10: true
+node_vlan_20: true
+node_vlan_30: false

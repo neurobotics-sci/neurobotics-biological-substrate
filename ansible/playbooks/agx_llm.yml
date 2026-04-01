@@ -1,0 +1,83 @@
+---
+- name: "Bubo v6500 — AGX Orin 64GB (70B LLM) Setup"
+  hosts: agx_orin_64gb
+  become: true
+  tasks:
+    - name: Install llama.cpp dependencies
+      apt:
+        name: [cmake,libcurl4-openssl-dev,git,nvme-cli]
+        state: present
+      ignore_errors: yes
+
+    - name: Create model directory (use NVMe if available)
+      file: path=/opt/bubo/models state=directory owner=brain mode=0755
+
+    - name: Check for NVMe SSD
+      stat: path=/dev/nvme0n1
+      register: nvme
+
+    - name: Mount NVMe for model storage (if available)
+      mount:
+        path: /opt/bubo/models
+        src: /dev/nvme0n1
+        fstype: ext4
+        state: mounted
+      when: nvme.stat.exists
+      ignore_errors: yes
+
+    - name: Build llama.cpp for AGX (sm_87)
+      shell: |
+        cd /opt
+        rm -rf llama.cpp
+        git clone --depth=1 https://github.com/ggerganov/llama.cpp.git
+        cd llama.cpp
+        cmake -B build -DLLAMA_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=87 \
+              -DCMAKE_BUILD_TYPE=Release -DLLAMA_CUDA_F16=ON
+        cmake --build build --config Release -j8
+        cp build/bin/llama-server /usr/local/bin/
+      async: 900
+      poll: 30
+
+    - name: Deploy llama-server systemd service
+      copy:
+        dest: /etc/systemd/system/bubo-llm-70b.service
+        content: |
+          [Unit]
+          Description=Bubo 70B LLM Server (AGX Orin 64GB)
+          After=network.target
+          [Service]
+          Type=simple
+          User=brain
+          ExecStart=/usr/local/bin/llama-server \
+            --model /opt/bubo/models/llama3-70b-instruct-q4_k_m.gguf \
+            --n-gpu-layers 99 \
+            --ctx-size 2048 \
+            --threads 12 \
+            --batch-size 512 \
+            --port 8080 \
+            --host 0.0.0.0 \
+            --mlock \
+            --log-disable
+          Restart=on-failure
+          RestartSec=10
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Enable 70B LLM service
+      systemd:
+        name: bubo-llm-70b
+        enabled: yes
+        state: started
+        daemon_reload: yes
+      ignore_errors: yes
+
+    - name: Show download instructions for 70B model
+      debug:
+        msg: |
+          Download 70B model (38GB):
+          cd /opt/bubo/models
+          wget 'https://huggingface.co/bartowski/Meta-Llama-3-70B-Instruct-GGUF/resolve/main/Meta-Llama-3-70B-Instruct-Q4_K_M.gguf'
+          OR use huggingface-cli:
+          pip3 install huggingface-hub
+          huggingface-cli download bartowski/Meta-Llama-3-70B-Instruct-GGUF \
+            Meta-Llama-3-70B-Instruct-Q4_K_M.gguf --local-dir /opt/bubo/models/

@@ -1,0 +1,6 @@
+{
+  "provider": "local_openai_compatible",
+  "base_url": "http://127.0.0.1:8080/v1",
+  "primary_model": "local-70b",
+  "fast_model": "local-13b"
+}

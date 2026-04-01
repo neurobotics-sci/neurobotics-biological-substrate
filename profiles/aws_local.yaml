@@ -1,0 +1,60 @@
+---
+# profiles/aws_local.yaml
+# Profile 3 — AWS EC2 cluster + GPU instance running 70B LLM
+#
+# Use when: high-volume cloud deployment, privacy required, no API dependency.
+# LLM:     Llama-3-70B Q4_K_M on g5.12xlarge (4×A10G 96GB)
+# Nodes:   6 EC2 instances (cognitive tier only — no motor/sensory hardware)
+# Cost:    ~$7.15/hr on-demand | ~$2.14/hr spot | stop when idle
+
+name:        aws_local
+description: "AWS EC2 cluster with g5.12xlarge local 70B LLM"
+version:     "9000"
+substrate:   aws
+
+# ── LLM Configuration ────────────────────────────────────────────────────────
+llm:
+  backend:       local_70b
+  # endpoint resolved at runtime from SSM /bubo/prod/llm_ip
+  endpoint_ssm:  "/bubo/{env}/llm_ip"
+  endpoint_port: 8080
+  model:         "Meta-Llama-3-70B-Instruct-Q4_K_M.gguf"
+  gpu_instance:  "g5.12xlarge"
+  has_gpu_node:  true
+  fallback:      anthropic   # if GPU node unreachable, fall back to API
+
+# ── Hardware flags (cloud — no physical hardware) ────────────────────────────
+hardware:
+  servos:           false
+  gpio:             false
+  galvanic_barrier: false
+  vagus_nerve:      false
+  stm32:            false
+  preempt_rt:       false
+  # Cloud safety: NALB + API rate limits + spend limits serve as safety layer
+
+# ── Node configuration (IPs resolved from SSM at runtime) ────────────────────
+nodes:
+  gateway:      { port: 5599, instance: "t3.medium",   role: gateway }
+  limbic:       { port: 5621, instance: "c6i.xlarge",  role: limbic }
+  memory:       { port: 5643, instance: "r6i.xlarge",  role: memory }
+  social:       { port: 5609, instance: "c6i.2xlarge", role: social }
+  cortex:       { port: 5600, instance: "c6i.4xlarge", role: cortex }
+  llm:          { port: 8080, instance: "g5.12xlarge", role: llm }
+
+network:
+  vpc_cidr:     "10.10.0.0/16"
+  subnet_private: "10.10.2.0/24"
+  subnet_public:  "10.10.1.0/24"
+  nat_gateway:  true   # private nodes need outbound internet (for updates)
+  placement_group: cluster  # low-latency inter-node
+
+aws:
+  region:       "${AWS_DEFAULT_REGION}"
+  stack_name:   "bubo-prod"
+  cfn_template: "deploy/cloudformation/bubo_aws_local.yaml"
+  efs_ltm:      true    # EFS mount for persistent LTM storage
+
+# Gender and identity
+gender: male
+instance_name: Bubo Adam

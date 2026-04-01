@@ -1,0 +1,4 @@
+---
+node_vlan_10: true
+node_vlan_20: true   # receives motor feedback for fatigue model
+node_vlan_30: false
