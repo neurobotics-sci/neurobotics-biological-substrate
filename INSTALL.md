@@ -1,4 +1,4 @@
-# Bubo v10000 — Installation Guide
+# Bubo OSS+AGPL-3.0 Release v10.3 RC4 — Installation Guide
 
 ## Quick Start (Simulation Mode — No Hardware Needed)
 
