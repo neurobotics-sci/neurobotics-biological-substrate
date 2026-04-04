@@ -3,11 +3,11 @@
 ## Quick Start (Simulation Mode — No Hardware Needed)
 
 ```bash
-git clone https://github.com/bubo-brain/bubo.git
+git clone https://github.com/neurobotics-sci/neurobotics-biological-substrate.git
 cd bubo
 pip install -e ".[full]" --break-system-packages
 export BUBO_PROFILE=hardware_api
-export BUBO_LLM_API_KEY=sk-ant-your-key-here
+export BUBO_LLM_API_KEY=insert_your_llm_key--key-here
 python3 simulation/full_loop_sim.py
 ```
 
