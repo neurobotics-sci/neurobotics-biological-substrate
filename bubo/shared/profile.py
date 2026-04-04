@@ -41,10 +41,10 @@ ENV_OVERRIDE = "BUBO_PROFILE"
 # Valid profile names
 VALID_PROFILES = {
     "hardware_local":  "Physical Jetson cluster + AGX Orin 70B",
-    "hardware_api":    "Physical Jetson cluster + Claude API",
+    "hardware_api":    "Physical Jetson cluster + LLM API",
     "aws_local":       "AWS EC2 + g5.12xlarge 70B",
-    "aws_api":         "AWS EC2 + Claude API",
-    "aws_api_eve":     "AWS EC2 + Claude API (Eve)",
+    "aws_api":         "AWS EC2 + LLM API",
+    "aws_api_eve":     "AWS EC2 + LLM API (Eve)",
     "peanutpi_local": "peanutpi WSL2 local development",
     "aws_api_elias":   "Bubo Elias (AWS single node)",
     "aws_api_claudia": "Bubo Claudia (AWS single node)",
@@ -67,8 +67,8 @@ class LLMConfig:
     backend:                str = "LLM"   # local_70b|local_13b|LLM|openai|auto
     endpoint:               str = ""
     model:                  str = ""
-    model_sonnet:           str = "claude-sonnet-4-6"
-    model_haiku:            str = "claude-haiku-4-5-20251001"
+    model_sonnet:           str = "XXXXXXXXXXXX"
+    model_haiku:            str = "XXXXXXXXXXXX"
     has_agx_node:           bool = False
     has_gpu_node:           bool = False
     fallback:               str = "local_13b"

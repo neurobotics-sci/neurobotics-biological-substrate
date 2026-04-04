@@ -16,9 +16,9 @@ python3 simulation/full_loop_sim.py
 | Profile | Hardware | LLM | Use When |
 |---------|----------|-----|----------|
 | `hardware_local` | 21 Jetson nodes | AGX Orin 70B | Full robot, max quality |
-| `hardware_api`   | 20 Jetson nodes | Claude API | Full robot, no AGX Orin |
+| `hardware_api`   | 20 Jetson nodes | LLM API | Full robot, no AGX Orin |
 | `aws_local`      | 6 AWS EC2 | g5.12xl GPU | Cloud, privacy/volume |
-| `aws_api`        | 5 AWS EC2 | Claude API | Cloud, cheapest |
+| `aws_api`        | 5 AWS EC2 | LLM API | Cloud, cheapest |
 
 ## Deploy to All Four Targets
 
@@ -84,7 +84,7 @@ huggingface-cli download bartowski/Meta-Llama-3-70B-Instruct-GGUF \
   --local-dir /opt/bubo/models/
 ```
 
-### Claude API backend (hardware_api, aws_api)
+### LLM API backend (hardware_api, aws_api)
 ```bash
 # Get API key
 export BUBO_LLM_API_KEY=sk-ant-...

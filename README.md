@@ -64,7 +64,7 @@ TIER 2 — LIMBIC         Hippocampus · Amygdala · LTM Store · Association ·
 TIER 3 — SENSORY        Visual V1/V2/MT · Auditory A1 · S1 Homunculus · Superior Colliculus
 TIER 4 — MOTOR          Cerebellum CMAC · Basal Ganglia · M1 · Premotor · MPC Balance · PPO RL
 TIER 5 — CORTICAL       PFC-Left · PFC-Right · Social · Broca · Speech I/O · Web Search
-TIER 6 — LLM ORACLE     AGX Orin 70B (local) or Claude Sonnet/Haiku (API)
+TIER 6 — LLM ORACLE     AGX Orin 70B (local) or LLM Sonnet/Haiku (API)
 TIER 7 — SPINAL         Arms · Legs · STM32H7 · Omnihand x2 · Oculomotor VOR
 ```
 

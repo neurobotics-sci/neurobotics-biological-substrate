@@ -1,23 +1,23 @@
 ---
 # profiles/hardware_api.yaml
-# Profile 2 — Hardware cluster + Claude API (no AGX Orin node)
+# Profile 2 — Hardware cluster + LLM API (no AGX Orin node)
 #
 # Use when: building the physical robot without the $999 AGX Orin node.
-# LLM:     Claude Sonnet/Haiku via LLM API
+# LLM:     LLM Sonnet/Haiku via LLM API
 # Nodes:   20 Jetson nodes (no agx_llm node)
 # Cost:    ~$4,938 hardware BOM + ~$0.50-5/day API cost
 # Requires: BUBO_LLM_API_KEY environment variable or SSM
 
 name:        hardware_api
-description: "Physical Jetson cluster with Claude API LLM (no AGX Orin)"
+description: "Physical Jetson cluster with LLM API LLM (no AGX Orin)"
 version:     "9000"
 substrate:   hardware
 
 # ── LLM Configuration ────────────────────────────────────────────────────────
 llm:
-  backend:       LLM    # Primary: Claude API
-  model_sonnet:  "claude-sonnet-4-6"
-  model_haiku:   "claude-haiku-4-5-20251001"
+  backend:       LLM    # Primary: LLM API
+  model_sonnet:  "XXXXXXXXXXXX"
+  model_haiku:   "XXXXXXXXXXXX"
   has_agx_node:  false
   fallback:      local_13b    # if API unreachable: 13B on social node
   fallback_endpoint: "http://192.168.1.19:8081"

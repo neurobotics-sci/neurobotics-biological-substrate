@@ -83,8 +83,8 @@ class CognitiveRouter:
         if provider_type == "LLM":
             return LLMAdapter(
                 api_key=api_key,
-                primary_model=self.config.get("primary_model", "claude-3-7-sonnet-latest"),
-                fast_model=self.config.get("fast_model", "claude-3-5-haiku-latest")
+                primary_model=self.config.get("primary_model", "XXXXXXXXXXXX"),
+                fast_model=self.config.get("fast_model", "XXXXXXXXXXXX")
             )
         elif provider_type in ["openai", "local_openai_compatible", "llama_cpp"]:
             return OpenAICompatibleAdapter(

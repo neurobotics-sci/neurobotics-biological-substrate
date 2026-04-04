@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  Bubo V10 — aws_api profile: 5 EC2 instances + Claude API.
+  Bubo V10 — aws_api profile: 5 EC2 instances + LLM API.
   No GPU instance. ~$1.48/hr infra + ~$0.50/day API = ~$36/day total.
 
 Parameters:
@@ -18,10 +18,10 @@ Parameters:
     Type: String
     NoEcho: true
     Default: ""
-  ClaudeModel:
+  LLMModel:
     Type: String
-    Default: claude-sonnet-4-6
-    AllowedValues: [claude-sonnet-4-6, claude-haiku-4-5-20251001]
+    Default: XXXXXXXXXXXX
+    AllowedValues: [XXXXXXXXXXXX, XXXXXXXXXXXX]
   DailySpendLimitUSD:
     Type: Number
     Default: 20
@@ -258,7 +258,7 @@ Outputs:
   APIEndpoint:
     Value: !Sub https://${GatewayEIP}/api/v1
   CostEstimate:
-    Value: "~$1.48/hr infra + ~$0.50/day Claude API = ~$36/day (8hr/day usage)"
+    Value: "~$1.48/hr infra + ~$0.50/day LLM API = ~$36/day (8hr/day usage)"
   DeployCommand:
     Value: !Sub "./deploy/deploy.sh aws_api --env ${EnvironmentName}"
   EFSId:

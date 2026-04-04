@@ -80,7 +80,7 @@
   roles:
     - llm_local
 
-- name: "Bubo — LLM API (Claude — no hardware node)"
+- name: "Bubo — LLM API (LLM — no hardware node)"
   hosts: cortical   # API config goes on PFC nodes
   become: true
   tags: [llm, llm_api]

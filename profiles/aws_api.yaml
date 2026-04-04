@@ -1,23 +1,23 @@
 ---
 # profiles/aws_api.yaml
-# Profile 4 — AWS EC2 cluster + Claude API (no GPU instance)
+# Profile 4 — AWS EC2 cluster + LLM API (no GPU instance)
 #
 # Use when: cloud demo/dev/moderate production. Cheapest AWS deployment.
-# LLM:     Claude Sonnet/Haiku via LLM API
+# LLM:     LLM Sonnet/Haiku via LLM API
 # Nodes:   5 EC2 instances (no GPU node)
 # Cost:    ~$1.48/hr infra + ~$0.50/day API = ~$36/day total
 #          vs $171/day for aws_local — 79% cheaper
 
 name:        aws_api
-description: "AWS EC2 cluster with Claude API LLM (no GPU instance)"
+description: "AWS EC2 cluster with LLM API LLM (no GPU instance)"
 version:     "9000"
 substrate:   aws
 
 # ── LLM Configuration ────────────────────────────────────────────────────────
 llm:
   backend:       LLM
-  model_sonnet:  "claude-sonnet-4-6"
-  model_haiku:   "claude-haiku-4-5-20251001"
+  model_sonnet:  "XXXXXXXXXXXX"
+  model_haiku:   "XXXXXXXXXXXX"
   has_gpu_node:  false
   # API key stored in SSM Parameter Store (SecureString, never plaintext)
   api_key_ssm:   "/bubo/{env}/LLM_api_key"

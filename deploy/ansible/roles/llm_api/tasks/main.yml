@@ -1,6 +1,6 @@
 ---
 # deploy/ansible/roles/llm_api/tasks/main.yml
-# Configure Claude API backend.
+# Configure LLM API backend.
 # Used by: hardware_api and aws_api profiles.
 # No model download. No GPU. Just config + key.
 
@@ -57,8 +57,8 @@
     mode: '0644'
     content: |
       backend: LLM
-      model_sonnet: claude-sonnet-4-6
-      model_haiku: claude-haiku-4-5-20251001
+      model_sonnet: XXXXXXXXXXXX
+      model_haiku: XXXXXXXXXXXX
       daily_spend_limit_usd: {{ daily_spend_limit | default(20) }}
       fallback: local_13b
 
@@ -72,8 +72,8 @@
   blockinfile:
     path: /etc/bubo/env
     block: |
-      BUBO_CLAUDE_MODEL_SONNET=claude-sonnet-4-6
-      BUBO_CLAUDE_MODEL_HAIKU=claude-haiku-4-5-20251001
+      BUBO_LLM_MODEL_SONNET=XXXXXXXXXXXX
+      BUBO_LLM_MODEL_HAIKU=XXXXXXXXXXXX
     create: true
 
 - name: Test API connectivity

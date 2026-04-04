@@ -55,7 +55,7 @@
   roles:
     - llm_local
 
-- name: "Bubo Cloud — LLM API (Claude — no GPU instance)"
+- name: "Bubo Cloud — LLM API (LLM — no GPU instance)"
   hosts: bubo_cortex
   become: true
   tags: [llm, llm_api]
