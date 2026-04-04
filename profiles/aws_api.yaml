@@ -3,7 +3,7 @@
 # Profile 4 — AWS EC2 cluster + Claude API (no GPU instance)
 #
 # Use when: cloud demo/dev/moderate production. Cheapest AWS deployment.
-# LLM:     Claude Sonnet/Haiku via Anthropic API
+# LLM:     Claude Sonnet/Haiku via LLM API
 # Nodes:   5 EC2 instances (no GPU node)
 # Cost:    ~$1.48/hr infra + ~$0.50/day API = ~$36/day total
 #          vs $171/day for aws_local — 79% cheaper
@@ -15,12 +15,12 @@ substrate:   aws
 
 # ── LLM Configuration ────────────────────────────────────────────────────────
 llm:
-  backend:       anthropic
+  backend:       LLM
   model_sonnet:  "claude-sonnet-4-6"
   model_haiku:   "claude-haiku-4-5-20251001"
   has_gpu_node:  false
   # API key stored in SSM Parameter Store (SecureString, never plaintext)
-  api_key_ssm:   "/bubo/{env}/anthropic_api_key"
+  api_key_ssm:   "/bubo/{env}/LLM_api_key"
   daily_spend_limit_usd: 20.0
   fallback:      local_13b_optional  # only if fallback instance deployed
 
@@ -43,7 +43,7 @@ nodes:
 
 network:
   vpc_cidr:  "10.10.0.0/16"
-  nat_gateway: true    # CRITICAL: private nodes must reach api.anthropic.com
+  nat_gateway: true    # CRITICAL: private nodes must reach api.LLM.com
   placement_group: cluster
 
 aws:

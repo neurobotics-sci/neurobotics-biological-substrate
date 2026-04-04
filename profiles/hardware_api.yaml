@@ -3,10 +3,10 @@
 # Profile 2 — Hardware cluster + Claude API (no AGX Orin node)
 #
 # Use when: building the physical robot without the $999 AGX Orin node.
-# LLM:     Claude Sonnet/Haiku via Anthropic API
+# LLM:     Claude Sonnet/Haiku via LLM API
 # Nodes:   20 Jetson nodes (no agx_llm node)
 # Cost:    ~$4,938 hardware BOM + ~$0.50-5/day API cost
-# Requires: BUBO_ANTHROPIC_API_KEY environment variable or SSM
+# Requires: BUBO_LLM_API_KEY environment variable or SSM
 
 name:        hardware_api
 description: "Physical Jetson cluster with Claude API LLM (no AGX Orin)"
@@ -15,7 +15,7 @@ substrate:   hardware
 
 # ── LLM Configuration ────────────────────────────────────────────────────────
 llm:
-  backend:       anthropic    # Primary: Claude API
+  backend:       LLM    # Primary: Claude API
   model_sonnet:  "claude-sonnet-4-6"
   model_haiku:   "claude-haiku-4-5-20251001"
   has_agx_node:  false
@@ -23,9 +23,9 @@ llm:
   fallback_endpoint: "http://192.168.1.19:8081"
   daily_spend_limit_usd: 20.0
   # API key sources (checked in order):
-  #   1. BUBO_ANTHROPIC_API_KEY environment variable
-  #   2. /etc/bubo/secrets/anthropic_key (file, chmod 600)
-  #   3. AWS SSM: /bubo/prod/anthropic_api_key (if aws cli available)
+  #   1. BUBO_LLM_API_KEY environment variable
+  #   2. /etc/bubo/secrets/LLM_key (file, chmod 600)
+  #   3. AWS SSM: /bubo/prod/LLM_api_key (if aws cli available)
 
 # ── Hardware flags (identical to hardware_local) ─────────────────────────────
 hardware:

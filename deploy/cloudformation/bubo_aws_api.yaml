@@ -14,7 +14,7 @@ Parameters:
     Default: bubo-prod
   KeyPairName:
     Type: AWS::EC2::KeyPair::KeyName
-  AnthropicApiKey:
+  LLMApiKey:
     Type: String
     NoEcho: true
     Default: ""
@@ -34,12 +34,12 @@ Mappings:
 
 Resources:
 
-  AnthropicKeyParam:
+  LLMKeyParam:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub /bubo/${EnvironmentName}/anthropic_api_key
+      Name: !Sub /bubo/${EnvironmentName}/LLM_api_key
       Type: SecureString
-      Value: !If [HasApiKey, !Ref AnthropicApiKey, "PLACEHOLDER"]
+      Value: !If [HasApiKey, !Ref LLMApiKey, "PLACEHOLDER"]
 
   BuboVPC:
     Type: AWS::EC2::VPC
@@ -171,7 +171,7 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
-          export BUBO_NODE=gateway BUBO_ENV=${EnvironmentName} BUBO_PROFILE=aws_api BUBO_LLM_BACKEND=anthropic
+          export BUBO_NODE=gateway BUBO_ENV=${EnvironmentName} BUBO_PROFILE=aws_api BUBO_LLM_BACKEND=LLM
           curl -fsSL https://raw.githubusercontent.com/bubo-brain/bubo/main/deploy/scripts/bootstrap.sh | bash
 
   LimbicInstance:
@@ -188,7 +188,7 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
-          export BUBO_NODE=limbic BUBO_ENV=${EnvironmentName} BUBO_PROFILE=aws_api BUBO_LLM_BACKEND=anthropic
+          export BUBO_NODE=limbic BUBO_ENV=${EnvironmentName} BUBO_PROFILE=aws_api BUBO_LLM_BACKEND=LLM
           curl -fsSL https://raw.githubusercontent.com/bubo-brain/bubo/main/deploy/scripts/bootstrap.sh | bash
 
   MemoryInstance:
@@ -222,7 +222,7 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
-          export BUBO_NODE=social BUBO_ENV=${EnvironmentName} BUBO_PROFILE=aws_api BUBO_LLM_BACKEND=anthropic
+          export BUBO_NODE=social BUBO_ENV=${EnvironmentName} BUBO_PROFILE=aws_api BUBO_LLM_BACKEND=LLM
           curl -fsSL https://raw.githubusercontent.com/bubo-brain/bubo/main/deploy/scripts/bootstrap.sh | bash
 
   CortexInstance:
@@ -239,7 +239,7 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
-          export BUBO_NODE=cortex BUBO_ENV=${EnvironmentName} BUBO_PROFILE=aws_api BUBO_LLM_BACKEND=anthropic
+          export BUBO_NODE=cortex BUBO_ENV=${EnvironmentName} BUBO_PROFILE=aws_api BUBO_LLM_BACKEND=LLM
           curl -fsSL https://raw.githubusercontent.com/bubo-brain/bubo/main/deploy/scripts/bootstrap.sh | bash
 
   GatewayEIP:
@@ -249,7 +249,7 @@ Resources:
       Tags: [{Key: Name, Value: !Sub "${EnvironmentName}-eip"}]
 
 Conditions:
-  HasApiKey: !Not [!Equals [!Ref AnthropicApiKey, ""]]
+  HasApiKey: !Not [!Equals [!Ref LLMApiKey, ""]]
 
 Outputs:
   GatewayPublicIP:

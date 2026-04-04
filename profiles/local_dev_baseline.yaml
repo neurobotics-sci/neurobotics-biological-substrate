@@ -15,9 +15,9 @@ instance_name: Bubo Research Node
 
 # ── LLM Configuration ────────────────────────────────────────────────────────
 llm:
-  backend:              anthropic
+  backend:              LLM
   daily_spend_limit_usd: 10.0
-  # API key source: BUBO_ANTHROPIC_API_KEY environment variable
+  # API key source: BUBO_LLM_API_KEY environment variable
 
 # ── Hardware (Simulated — No physical I/O) ───────────────────────────────────
 hardware:

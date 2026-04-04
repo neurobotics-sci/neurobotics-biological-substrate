@@ -14,7 +14,7 @@ substrate:   hardware        # hardware | aws
 
 # ── LLM Configuration ────────────────────────────────────────────────────────
 llm:
-  backend:       local_70b   # local_70b | local_13b | anthropic | openai | auto
+  backend:       local_70b   # local_70b | local_13b | LLM | openai | auto
   endpoint:      "http://192.168.1.20:8080"
   model:         "Meta-Llama-3-70B-Instruct-Q4_K_M.gguf"
   has_agx_node:  true

@@ -26,10 +26,10 @@ class LLMProvider(ABC):
 
 # ─── 2. Concrete Implementations ─────────────────────────────────────────────
 
-class AnthropicAdapter(LLMProvider):
+class LLMAdapter(LLMProvider):
     def __init__(self, api_key: str, primary_model: str, fast_model: str):
-        import anthropic
-        self.client = anthropic.Anthropic(api_key=api_key)
+        import LLM
+        self.client = LLM.LLM(api_key=api_key)
         self.primary_model = primary_model
         self.fast_model = fast_model
 
@@ -80,8 +80,8 @@ class CognitiveRouter:
         provider_type = self.config.get("provider", "local_openai_compatible").lower()
         api_key = os.getenv("BUBO_API_KEY", "sk-dummy-key-for-local")
         
-        if provider_type == "anthropic":
-            return AnthropicAdapter(
+        if provider_type == "LLM":
+            return LLMAdapter(
                 api_key=api_key,
                 primary_model=self.config.get("primary_model", "claude-3-7-sonnet-latest"),
                 fast_model=self.config.get("fast_model", "claude-3-5-haiku-latest")

@@ -7,7 +7,7 @@ BUBO_NODE=${BUBO_NODE:-unknown}
 BUBO_ENV=${BUBO_ENV:-prod}
 BUBO_PROFILE=${BUBO_PROFILE:-aws_api}
 BUBO_GPU=${BUBO_GPU:-false}
-BUBO_LLM_BACKEND=${BUBO_LLM_BACKEND:-anthropic}
+BUBO_LLM_BACKEND=${BUBO_LLM_BACKEND:-LLM}
 
 echo "[Bubo Bootstrap] node=$BUBO_NODE profile=$BUBO_PROFILE llm=$BUBO_LLM_BACKEND"
 
@@ -42,7 +42,7 @@ git clone --depth=1 https://github.com/bubo-brain/bubo.git /opt/bubo/src 2>/dev/
 cd /opt/bubo/src
 ansible-playbook -i "localhost," -c local deploy/ansible/site_aws.yml \
   --tags bootstrap \
-  -e "bubo_profile=$BUBO_PROFILE bubo_role=$BUBO_NODE llm_tag=${BUBO_LLM_BACKEND/anthropic/llm_api}" \
+  -e "bubo_profile=$BUBO_PROFILE bubo_role=$BUBO_NODE llm_tag=${BUBO_LLM_BACKEND/LLM/llm_api}" \
   >> /var/log/bubo/bootstrap.log 2>&1 || true
 
 # Signal CloudFormation

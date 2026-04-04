@@ -21,7 +21,7 @@ llm:
   model:         "Meta-Llama-3-70B-Instruct-Q4_K_M.gguf"
   gpu_instance:  "g5.12xlarge"
   has_gpu_node:  true
-  fallback:      anthropic   # if GPU node unreachable, fall back to API
+  fallback:      LLM   # if GPU node unreachable, fall back to API
 
 # ── Hardware flags (cloud — no physical hardware) ────────────────────────────
 hardware:

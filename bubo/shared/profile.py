@@ -11,7 +11,7 @@ Usage:
     from bubo.shared.profile import profile, cfg
 
     # Get LLM backend type
-    if profile.llm_backend == "anthropic":
+    if profile.llm_backend == "LLM":
         ...
 
     # Get a node's IP
@@ -64,7 +64,7 @@ class NodeConfig:
 
 @dataclass
 class LLMConfig:
-    backend:                str = "anthropic"   # local_70b|local_13b|anthropic|openai|auto
+    backend:                str = "LLM"   # local_70b|local_13b|LLM|openai|auto
     endpoint:               str = ""
     model:                  str = ""
     model_sonnet:           str = "claude-sonnet-4-6"
@@ -185,7 +185,7 @@ class BuboProfile:
 
     @property
     def uses_api_llm(self) -> bool:
-        return self.llm_backend in ("anthropic", "openai", "gemini")
+        return self.llm_backend in ("LLM", "openai", "gemini")
 
     @property
     def uses_local_llm(self) -> bool:
@@ -251,17 +251,17 @@ class BuboProfile:
             return f"http://{n.ip}:{n.port}"
         return ""
 
-    def anthropic_api_key(self, env: str = "prod") -> str:
-        """Resolve Anthropic API key from env var, file, or SSM."""
+    def LLM_api_key(self, env: str = "prod") -> str:
+        """Resolve LLM API key from env var, file, or SSM."""
         # 1. Environment variable (highest priority)
-        key = os.environ.get("BUBO_ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+        key = os.environ.get("BUBO_LLM_API_KEY") or os.environ.get("LLM_API_KEY")
         if key: return key
         # 2. File on disk
-        key_file = Path("/etc/bubo/secrets/anthropic_key")
+        key_file = Path("/etc/bubo/secrets/LLM_key")
         if key_file.exists():
             return key_file.read_text().strip()
         # 3. AWS SSM Parameter Store
-        ssm_path = (self.llm.api_key_ssm or f"/bubo/{env}/anthropic_api_key"
+        ssm_path = (self.llm.api_key_ssm or f"/bubo/{env}/LLM_api_key"
                     ).replace("{env}", env)
         return self._resolve_ssm(ssm_path)
 
@@ -323,8 +323,8 @@ def _auto_detect_profile() -> str:
     # Check for Jetson
     if Path("/etc/nv_tegra_release").exists():
         # Check if API key available
-        has_key = bool(os.environ.get("ANTHROPIC_API_KEY") or
-                       os.environ.get("BUBO_ANTHROPIC_API_KEY"))
+        has_key = bool(os.environ.get("LLM_API_KEY") or
+                       os.environ.get("BUBO_LLM_API_KEY"))
         return "hardware_api" if has_key else "hardware_local"
 
     # Check for AWS EC2 (IMDSv2)
@@ -336,8 +336,8 @@ def _auto_detect_profile() -> str:
             method="PUT")
         with urllib.request.urlopen(token_req, timeout=1) as r:
             if r.status == 200:
-                has_key = bool(os.environ.get("ANTHROPIC_API_KEY") or
-                               os.environ.get("BUBO_ANTHROPIC_API_KEY"))
+                has_key = bool(os.environ.get("LLM_API_KEY") or
+                               os.environ.get("BUBO_LLM_API_KEY"))
                 return "aws_api" if has_key else "aws_local"
     except Exception:
         pass

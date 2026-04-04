@@ -14,7 +14,7 @@ setup(
     python_requires=">=3.9",
     install_requires=[
         "numpy>=1.21", "scipy>=1.7", "pyzmq>=22.0",
-        "anthropic>=0.18", "faiss-cpu>=1.7",
+        "LLM>=0.18", "faiss-cpu>=1.7",
         "adafruit-circuitpython-ht16k33>=2.0",
         "RPi.GPIO>=0.7",
         "pyyaml>=6.0", "boto3>=1.26",

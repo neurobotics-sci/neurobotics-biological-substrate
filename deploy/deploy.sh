@@ -45,8 +45,8 @@ deploy_hardware() {
   if [[ "$PROFILE" == "hardware_local" ]]; then LLM_TAG="llm_local"
   else
     LLM_TAG="llm_api"
-    [[ -z "${BUBO_ANTHROPIC_API_KEY:-}${ANTHROPIC_API_KEY:-}" ]] && \
-      echo -e "${YLW}  Warning: BUBO_ANTHROPIC_API_KEY not set — 13B fallback active${NC}"
+    [[ -z "${BUBO_LLM_API_KEY:-}${LLM_API_KEY:-}" ]] && \
+      echo -e "${YLW}  Warning: BUBO_LLM_API_KEY not set — 13B fallback active${NC}"
   fi
   INVENTORY="deploy/ansible/inventories/hardware/hosts.ini"
   if [[ ! -f "$INVENTORY" ]]; then
@@ -96,8 +96,8 @@ deploy_aws() {
   echo -e "${BLD}Substrate: AWS EC2 (${ENV_NAME}, ${REGION})${NC}"
   CFN_TEMPLATE="deploy/cloudformation/bubo_aws_$( [[ "$PROFILE" == "aws_local" ]] && echo local || echo api ).yaml"
   # API key required for any api-LLM profile
-  [[ "$PROFILE" =~ aws_api ]] && [[ -z "${BUBO_ANTHROPIC_API_KEY:-}${ANTHROPIC_API_KEY:-}" ]] && {
-    echo -e "${RED}Error: BUBO_ANTHROPIC_API_KEY required for ${PROFILE}${NC}"; exit 1; }
+  [[ "$PROFILE" =~ aws_api ]] && [[ -z "${BUBO_LLM_API_KEY:-}${LLM_API_KEY:-}" ]] && {
+    echo -e "${RED}Error: BUBO_LLM_API_KEY required for ${PROFILE}${NC}"; exit 1; }
   # Eve additionally requires BUBO_ADAM_ENDPOINT
   [[ "$PROFILE" == "aws_api_eve" ]] && [[ -z "${BUBO_ADAM_ENDPOINT:-}" ]] && {
     echo -e "${RED}Error: BUBO_ADAM_ENDPOINT required for aws_api_eve (export Adam's IP first)${NC}"; exit 1; }
@@ -119,7 +119,7 @@ deploy_aws() {
       echo "  Creating CloudFormation stack..."
       KEYPAIR=$(aws ec2 describe-key-pairs --query "KeyPairs[0].KeyName" --output text 2>/dev/null || echo "default")
       PARAMS="ParameterKey=KeyPairName,ParameterValue=${KEYPAIR} ParameterKey=EnvironmentName,ParameterValue=${ENV_NAME}"
-      [[ "$PROFILE" == "aws_api" ]] && PARAMS="$PARAMS ParameterKey=AnthropicApiKey,ParameterValue=${BUBO_ANTHROPIC_API_KEY:-${ANTHROPIC_API_KEY}}"
+      [[ "$PROFILE" == "aws_api" ]] && PARAMS="$PARAMS ParameterKey=LLMApiKey,ParameterValue=${BUBO_LLM_API_KEY:-${LLM_API_KEY}}"
       aws cloudformation create-stack --stack-name "${ENV_NAME}" \
         --template-body "file://${CFN_TEMPLATE}" --parameters $PARAMS \
         --capabilities CAPABILITY_NAMED_IAM --region "${REGION}"

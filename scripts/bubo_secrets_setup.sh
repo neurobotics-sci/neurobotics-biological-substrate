@@ -6,7 +6,7 @@ echo ""
 echo "This will create ~/.bubo_secrets with your API key."
 echo "It will NOT be committed to git."
 echo ""
-read -rp "Anthropic API key (sk-ant-...): " ANTHROPIC_KEY
+read -rp "LLM API key (sk-ant-...): " LLM_KEY
 read -rp "AWS Access Key ID: " AWS_KEY
 read -rsp "AWS Secret Access Key: " AWS_SECRET
 echo ""
@@ -14,7 +14,7 @@ read -rp "AWS Default Region [us-east-1]: " AWS_REGION
 AWS_REGION="${AWS_REGION:-us-east-1}"
 
 cat > "$HOME/.bubo_secrets" << SECRETS
-export BUBO_ANTHROPIC_API_KEY="${ANTHROPIC_KEY}"
+export BUBO_LLM_API_KEY="${LLM_KEY}"
 export AWS_ACCESS_KEY_ID="${AWS_KEY}"
 export AWS_SECRET_ACCESS_KEY="${AWS_SECRET}"
 export AWS_DEFAULT_REGION="${AWS_REGION}"

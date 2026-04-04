@@ -10,17 +10,17 @@
     virtualenv: "{{ bubo_venv }}"
   become_user: brain
 
-- name: Resolve Anthropic API key
+- name: Resolve LLM API key
   block:
     - name: Check environment variable
-      shell: "echo ${BUBO_ANTHROPIC_API_KEY:-${ANTHROPIC_API_KEY:-}}"
+      shell: "echo ${BUBO_LLM_API_KEY:-${LLM_API_KEY:-}}"
       register: env_key
       changed_when: false
 
     - name: Check SSM Parameter Store
       shell: >
         aws ssm get-parameter
-        --name /bubo/{{ env_name | default('prod') }}/anthropic_api_key
+        --name /bubo/{{ env_name | default('prod') }}/LLM_api_key
         --with-decryption --query Parameter.Value --output text 2>/dev/null || true
       register: ssm_key
       changed_when: false
@@ -29,13 +29,13 @@
     - name: API key not found warning
       debug:
         msg: >
-          WARNING: Anthropic API key not found.
-          Set BUBO_ANTHROPIC_API_KEY or store in SSM at
-          /bubo/{{ env_name | default('prod') }}/anthropic_api_key
+          WARNING: LLM API key not found.
+          Set BUBO_LLM_API_KEY or store in SSM at
+          /bubo/{{ env_name | default('prod') }}/LLM_api_key
 
 - name: Write API key to secrets file
   copy:
-    dest: /etc/bubo/secrets/anthropic_key
+    dest: /etc/bubo/secrets/LLM_key
     content: "{{ env_key.stdout | default(ssm_key.stdout | default('')) }}"
     owner: brain
     mode: '0600'
@@ -56,7 +56,7 @@
     owner: brain
     mode: '0644'
     content: |
-      backend: anthropic
+      backend: LLM
       model_sonnet: claude-sonnet-4-6
       model_haiku: claude-haiku-4-5-20251001
       daily_spend_limit_usd: {{ daily_spend_limit | default(20) }}
@@ -65,7 +65,7 @@
 - name: Set BUBO_LLM_BACKEND in environment
   lineinfile:
     path: /etc/bubo/env
-    line: "BUBO_LLM_BACKEND=anthropic"
+    line: "BUBO_LLM_BACKEND=LLM"
     create: true
 
 - name: Set model names in environment
@@ -79,12 +79,12 @@
 - name: Test API connectivity
   shell: |
     source /etc/bubo/env
-    KEY=$(cat /etc/bubo/secrets/anthropic_key 2>/dev/null || echo "")
+    KEY=$(cat /etc/bubo/secrets/LLM_key 2>/dev/null || echo "")
     if [ -n "$KEY" ]; then
       curl -s -o /dev/null -w "%{http_code}" \
         -H "x-api-key: $KEY" \
-        -H "anthropic-version: 2023-06-01" \
-        https://api.anthropic.com/v1/models | grep -q "200" && echo "API OK" || echo "API check failed"
+        -H "LLM-version: 2023-06-01" \
+        https://api.LLM.com/v1/models | grep -q "200" && echo "API OK" || echo "API check failed"
     else
       echo "No API key — skipping test"
     fi
@@ -94,4 +94,4 @@
 
 - name: API connectivity result
   debug:
-    msg: "Anthropic API: {{ api_test.stdout | default('not tested') }}"
+    msg: "LLM API: {{ api_test.stdout | default('not tested') }}"

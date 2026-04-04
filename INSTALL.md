@@ -7,7 +7,7 @@ git clone https://github.com/bubo-brain/bubo.git
 cd bubo
 pip install -e ".[full]" --break-system-packages
 export BUBO_PROFILE=hardware_api
-export BUBO_ANTHROPIC_API_KEY=sk-ant-your-key-here
+export BUBO_LLM_API_KEY=sk-ant-your-key-here
 python3 simulation/full_loop_sim.py
 ```
 
@@ -30,7 +30,7 @@ export BUBO_PROFILE=hardware_api   # or hardware_local, aws_local, aws_api
 ./deploy/deploy.sh hardware_api
 
 # AWS deployment (requires AWS CLI configured)
-export BUBO_ANTHROPIC_API_KEY=sk-ant-...
+export BUBO_LLM_API_KEY=sk-ant-...
 ./deploy/deploy.sh aws_api
 
 # Dry run (no changes)
@@ -86,12 +86,12 @@ huggingface-cli download bartowski/Meta-Llama-3-70B-Instruct-GGUF \
 
 ### Claude API backend (hardware_api, aws_api)
 ```bash
-# Get API key from https://console.anthropic.com/
-export BUBO_ANTHROPIC_API_KEY=sk-ant-...
+# Get API key
+export BUBO_LLM_API_KEY=sk-ant-...
 # Or store in file:
 mkdir -p /etc/bubo/secrets
-echo "sk-ant-..." > /etc/bubo/secrets/anthropic_key
-chmod 600 /etc/bubo/secrets/anthropic_key
+echo "*sk-***-..." > /etc/bubo/secrets/llm_api_key
+chmod 600 /etc/bubo/secrets/llm_api_key
 ```
 
 ### Cloud (AWS) profiles
@@ -153,7 +153,7 @@ bubo/                   Brain modules
     idle/               Default Mode Network idle learner
     memory_manager/     Smart aging (Ebbinghaus + human weighting)
   shared/               Libraries: bus, HAL, kinematics, homunculus, profile
-  llm/                  LLM router (Anthropic API + local llama backends)
+  llm/                  LLM router (LLM-agnostic API + local llama backends)
   balance/              MPC balance controller + terrain mapper
   rl/                   PPO residual gait learner
   slam/                 RTABMap 3D SLAM bridge
@@ -190,14 +190,14 @@ docs/                   Architecture docs, feasibility, servo mapping
 
 | Profile | Key needed | Where to get |
 |---------|-----------|--------------|
-| `hardware_api` | `BUBO_ANTHROPIC_API_KEY` | console.anthropic.com |
-| `aws_api` | `BUBO_ANTHROPIC_API_KEY` | console.anthropic.com |
+| `hardware_api` | `BUBO_LLM_API_KEY` |  |
+| `aws_api` | `BUBO_LLM_API_KEY` |  |
 | `hardware_local` | None | — |
 | `aws_local` | None (uses local GPU) | — |
 | AWS deployment | AWS credentials | AWS IAM console |
 
 ## Getting Help
 
-- GitHub Issues: https://github.com/bubo-brain/bubo/issues
+- GitHub Issues: https://github.com/neurobotics-sci/neurobotics-biological-substrate/issues
 - arXiv paper: https://arxiv.org/abs/[TBD]
-- Kenneth Renshaw: kenneth@bubo.ai
+- Kenneth Renshaw: kenneth.renshaw@neuroboticssci.ai

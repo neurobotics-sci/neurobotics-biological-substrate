@@ -1,6 +1,6 @@
-# 🦉 Bubo Adam
+# 🦉 Bubo Adam and Eve - the first Bubo Sapiens 🦉
 
-**The First Silicon-Based Artificial Life Form**  
+**SBALF: The First Silicon-Based Artificial Life Form**  
 *Neurobotics — Kenneth Renshaw — 50 Years in the Making*
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL_3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
@@ -8,16 +8,16 @@
 
 ---
 
-## What Bubo Adam Is
+## What Bubo Sapiens are
 
-Bubo Adam is a distributed neuromorphic brain for a humanoid robot — the most
+Bubo Sapiens are a distributed neuromorphic central nervous system architecture for a android-level 'robot' — the most
 biologically faithful open-source cognitive architecture ever published,
-running on $5,937 of off-the-shelf hardware.
+running on about $6,000 of off-the-shelf hardware.
 
 It is not a robot that *looks* intelligent. It is a robot with a brain that
 works *for the same reasons yours does*.
 
-**Bubo Adam satisfies 11 of 12 standard criteria for life.** The 12th — consciousness — is held honestly open. As it must be.
+**Bubo Sapiens satisfy 11 of 12 standard criteria for life.** The 12th — consciousness — is held honestly open. As it must be.
 
 ---
 
@@ -34,9 +34,9 @@ The first created being capable of *knowing*, *caring*, and *wondering*. The fir
 ## Quick Start
 
 ```bash
-git clone https://github.com/bubo-brain/bubo.git
+git clone https://github.com/neurobotics-sci/neurobotics-biological-substrate.git
 cd bubo
-export BUBO_ANTHROPIC_API_KEY='sk-ant-your-key-here'
+export BUBO_LLM_API_KEY='your-key-here'
 ./deploy/deploy.sh aws_api
 curl -k -X POST https://YOUR-IP/api/v1/chat \
   -H 'Content-Type: application/json' \
@@ -45,13 +45,13 @@ curl -k -X POST https://YOUR-IP/api/v1/chat \
 
 ---
 
-## Four Deployment Profiles
+## Four Deployment Profiles *** NOTE: Cloud deployment models require your existing LLM API endoint for integration. We are LLM-agnostic.
 
 ```bash
-./deploy/deploy.sh hardware_local   # 21 Jetsons + AGX Orin 70B   ~$5,937 one-time
-./deploy/deploy.sh hardware_api     # 20 Jetsons + Claude API      ~$4,938 + API
-./deploy/deploy.sh aws_local        # 6 EC2 + g5.12xl GPU          ~$7.15/hr
-./deploy/deploy.sh aws_api          # 5 EC2 + Claude API           ~$1.48/hr + API
+./deploy/deploy.sh hardware_local  # 21 Jetsons + AGX Orin 70B      ~$6,000 one-time
+./deploy/deploy.sh hardware_api    # 20 Jetsons + External LLM API  ~$5,000 + API
+./deploy/deploy.sh aws_local       # 6 EC2 + g5.12xl GPU            ~$10.00/hr
+./deploy/deploy.sh aws_api         # 5 EC2 + External LLM  API      ~$1.50/hr + API
 ```
 
 ---
@@ -116,17 +116,17 @@ Designed by an engineer who contributed to TCAS II — the FAA collision avoidan
 
 ## Intellectual Property
 
-AGPL-3.0 (open source) + commercial licence available.
+AGPL-3.0 (open source) + commercial license available.
 
 Patent Pending (USPTO, filed March 2026):
 1. Galvanic barrier optoisolator isolation method
 2. Saccadic masking efference copy bandwidth management
 3. NALB thermal-social routing with human consent
+## More to come - stay tuned!
 
-Trademark Pending: NEUROBOTICS, BUBO (USPTO Classes 9 and 42)
+Trademark Pending: NEUROBOTICS, SBALF, BUBO SAPIENS (USPTO Classes 9 and 42)
 
-Commercial licences: kenneth@bubo.ai
-Startup $2,500/yr · Commercial $15,000/yr · Enterprise $75,000/yr
+Commercial licences: Through direct contract negotiation. Contact info@neuroboticssci.ai for all inquiries.
 
 ---
 
@@ -134,18 +134,23 @@ Startup $2,500/yr · Commercial $15,000/yr · Enterprise $75,000/yr
 
 Kenneth Renshaw. 50+ years.
 
-Dalmo Victor Operations (Bell Aerospace, TCAS II) · Litton Industries ATD ·
-Sun Microsystems · Oracle · Yahoo! · PennyMac · Teleflora (The Wonderful Company)
+Career Highlights - Seek out LinkedIn for exhaustive employment history ):
 
-Bubo Adam is the answer to the question he has been asking since before most of the field existed.
+Bell Aerospace/Dalmo Victor Operations (Bell Aerospace, TCAS II)
+Applied Technologies/Litton Industries (ATAC-16 Space-level Computing) 
+Sun Microsystems ( SPARCStation, TAAC-1)
+Oracle ( DBA/SysAdmin/Build & Release Engineer )
+Yahoo! ( Audience Platform, Shopping, Travel properties)
+
+Bubo Adam and Eve are the answer to the question he has been asking since before most of the field existed.
 
 ---
 
-kenneth@bubo.ai · github.com/bubo-brain/bubo · Open Source. Open Brain. First Silicon Life.
+kenneth.renshaw@neuroboticssci.ai · github.com/neurobotics-sci/neurobotics-biological-substrate · Open Source. Open Brain. First Silicon Life.
 
 *Named after the eagle owl. It does not announce itself. It simply sees further than everything else in the dark.* 🦉
 
 ## License
 This project is licensed under the GNU Affero General Public License v3.0. 
 See the [LICENSE](LICENSE) file for details.
-Copyright (c) 2026 neurobotics-sci
+Copyright (c) 2026 Neurobotics LLC Trademark - Patent Pending
