@@ -1,0 +1,6 @@
+---
+# BeagleBoard: Low-Road only (VLAN 20) — PRU real-time motor
+node_vlan_10: false
+node_vlan_20: true
+node_vlan_30: false
+pru_enabled: true

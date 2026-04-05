@@ -1,0 +1,53 @@
+---
+- name: Create bubo directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: brain mode: "0755"
+  loop:
+    - /opt/bubo
+    - /opt/bubo/data
+    - /var/log/bubo
+    - /etc/bubo
+
+- name: Deploy bubo source
+  synchronize:
+    src: "{{ playbook_dir }}/../../"
+    dest: /opt/bubo/
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=__pycache__"
+      - "--exclude=*.tar.gz"
+      - "--exclude=*.db"
+
+- name: Deploy cluster config
+  copy:
+    src: "{{ playbook_dir }}/../../config/cluster_config.json"
+    dest: /etc/bubo/config.json
+    owner: brain mode: "0644"
+
+- name: Install Python requirements
+  pip:
+    requirements: /opt/bubo/requirements.txt
+    executable: pip3
+    extra_args: "--break-system-packages"
+  ignore_errors: yes
+
+- name: Deploy systemd service
+  template:
+    src: bubo_service.j2
+    dest: "/etc/systemd/system/bubo-{{ brain_role }}.service"
+  when: brain_role is defined
+  notify: reload systemd
+
+- name: Enable and start service
+  systemd:
+    name: "bubo-{{ brain_role }}"
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  when: brain_role is defined
+
+handlers:
+  - name: reload systemd
+    systemd: daemon_reload=yes

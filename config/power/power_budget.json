@@ -1,0 +1,42 @@
+{
+  "_version": "5400",
+  "_description": "Bubo power consumption analysis",
+  "nodes": {
+    "hypothalamus":  {"hw": "Orin 8GB", "idle_W": 7, "load_W": 20, "qty": 1},
+    "thalamus-l":    {"hw": "Orin 8GB", "idle_W": 7, "load_W": 18, "qty": 1},
+    "insula":        {"hw": "Orin 8GB", "idle_W": 7, "load_W": 15, "qty": 1},
+    "parietal":      {"hw": "Orin 8GB", "idle_W": 7, "load_W": 18, "qty": 1},
+    "cingulate":     {"hw": "Orin 8GB", "idle_W": 7, "load_W": 15, "qty": 1},
+    "thalamus-r":    {"hw": "Orin 8GB", "idle_W": 7, "load_W": 18, "qty": 1},
+    "hippocampus":   {"hw": "Nano 4GB", "idle_W": 5, "load_W": 10, "qty": 1},
+    "amygdala":      {"hw": "Nano 4GB", "idle_W": 5, "load_W": 8,  "qty": 1},
+    "cerebellum":    {"hw": "Nano 4GB", "idle_W": 5, "load_W": 10, "qty": 1},
+    "basal-ganglia": {"hw": "Nano 4GB", "idle_W": 5, "load_W": 8,  "qty": 1},
+    "association":   {"hw": "Nano 4GB", "idle_W": 5, "load_W": 8,  "qty": 1},
+    "ltm-store":     {"hw": "Nano 4GB", "idle_W": 5, "load_W": 8,  "qty": 1},
+    "visual":        {"hw": "Nano 2GB", "idle_W": 3, "load_W": 7,  "qty": 1},
+    "auditory":      {"hw": "Nano 2GB", "idle_W": 3, "load_W": 5,  "qty": 1},
+    "somatosensory": {"hw": "Nano 2GB", "idle_W": 3, "load_W": 5,  "qty": 1},
+    "spinal-arms":   {"hw": "Nano 2GB", "idle_W": 3, "load_W": 7,  "qty": 1},
+    "sup-colliculus":{"hw": "BeagleBoard","idle_W":2,"load_W": 5,  "qty": 1},
+    "spinal-legs":   {"hw": "BeagleBoard","idle_W":2,"load_W": 5,  "qty": 1}
+  },
+  "servos": {
+    "dynamixel_xl430": {"stall_W": 8.2, "typical_W": 2.5, "qty": 26}
+  },
+  "network": {"switch_W": 15},
+  "totals": {
+    "nodes_idle_W":   142,
+    "nodes_load_W":   313,
+    "servos_idle_W":  65,
+    "servos_active_W": 213,
+    "switch_W":       15,
+    "grand_idle_W":   222,
+    "grand_active_W": 541,
+    "recommended_psu": "600W 24V (25A)",
+    "battery_24V_20Ah_Wh": 480,
+    "runtime_idle_h":   2.16,
+    "runtime_active_h": 0.89,
+    "notes": "Active = all servos moving + GPU inference. Typical use ~350W = 1.4h runtime"
+  }
+}

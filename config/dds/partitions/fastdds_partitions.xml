@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  config/dds/partitions/fastdds_partitions.xml — Bubo v5550
+
+  DATA STORM SOLUTION: DDS Partition Topology
+  ═══════════════════════════════════════════
+
+  ROOT CAUSE: With 20 nodes each subscribing to all others via ZMQ PUB/SUB,
+  every message is delivered to every node regardless of relevance. A 100Hz
+  motor feedback message from spinal-arms is broadcast to the hippocampus,
+  visual cortex, LTM store — none of which use it. This creates:
+    - Switch multicast table overflow (484 entries → flooding mode)
+    - CPU interrupt overload on irrelevant receivers (Python event loop stall)
+    - 20× more bandwidth than necessary at each node
+
+  PARTITION TOPOLOGY (5 data planes):
+  ════════════════════════════════════
+
+  LIMBIC      hippocampus, amygdala, ltm-store, hypothalamus, insula
+              Topics: LMB_*, INS_*, LTM_*
+              Max nodes communicating: 5 → 5×4=20 pairs (not 20×19=380)
+
+  VISUAL      visual, sup-colliculus, auditory → thalamus-l
+              Topics: AFF_VIS_*, AFF_AUD_*, AFF_VEST, BS_SC_*
+              Max pairs: 4×3=12
+
+  MOTOR       cerebellum, spinal-arms, spinal-legs, basal-ganglia
+              Topics: SPN_*, CRB_*, EFF_M1_*, RFX_*, VOR_*
+              Max pairs: 4×3=12
+
+              Topics: CTX_*, BRC_*, SOC_*, THL_*, PAR_*
+              Max pairs: 6×5=30
+
+  NEURO       hypothalamus → ALL partitions (broadcast neuromodulators)
+              Topics: NM_DA_VTA, NM_NE_LC, NM_5HT_RAP, NM_ACH_NBM
+              All nodes subscribe to "Neuro" partition
+
+  SAFETY      ALL subscribe (cross-partition emergency broadcast)
+              Topics: SFY_*, SYS_EMERGENCY, SYS_REWARD, THL_FAIL
+              Cannot be partition-filtered — safety must reach everything
+
+  BANDWIDTH REDUCTION (calculated):
+  ════════════════════════════════
+  Before: 20 nodes × 19 receivers × avg 2KB/msg × 30Hz avg = 22.8 MB/s received/node
+  After:  avg 5 nodes/partition × 4 receivers × 2KB × 30Hz = 1.2 MB/s received/node
+  Reduction: ~95% per non-Safety topic
+  Switch table entries: 380 → 47 active entries (88% reduction)
+-->
+
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+
+  <!-- ══════════════════════════════════════════════════════
+       PUBLISHER PROFILES — per partition membership
+  ══════════════════════════════════════════════════════ -->
+
+  <!-- LIMBIC partition publishers -->
+  <data_writer profile_name="pub_limbic">
+    <qos>
+      <reliability><kind>RELIABLE_RELIABILITY_QOS</kind></reliability>
+      <durability><kind>VOLATILE_DURABILITY_QOS</kind></durability>
+      <history><kind>KEEP_LAST_HISTORY_QOS</kind><depth>5</depth></history>
+      <deadline><period><nanosec>200000000</nanosec></period></deadline>
+    </qos>
+    <partitions>
+      <names><name>Limbic</name><name>Safety</name></names>
+    </partitions>
+  </data_writer>
+
+  <!-- VISUAL partition publishers -->
+  <data_writer profile_name="pub_visual">
+    <qos>
+      <reliability><kind>BEST_EFFORT_RELIABILITY_QOS</kind></reliability>
+      <history><kind>KEEP_LAST_HISTORY_QOS</kind><depth>1</depth></history>
+      <latencyBudget><duration><nanosec>5000000</nanosec></duration></latencyBudget>
+    </qos>
+    <partitions>
+      <names><name>Visual</name><name>Safety</name></names>
+    </partitions>
+  </data_writer>
+
+  <!-- MOTOR partition publishers — strict latency -->
+  <data_writer profile_name="pub_motor">
+    <qos>
+      <reliability><kind>BEST_EFFORT_RELIABILITY_QOS</kind></reliability>
+      <history><kind>KEEP_LAST_HISTORY_QOS</kind><depth>1</depth></history>
+      <deadline><period><nanosec>10000000</nanosec></period></deadline>
+      <latencyBudget><duration><nanosec>1000000</nanosec></duration></latencyBudget>
+    </qos>
+    <partitions>
+      <names><name>Motor</name><name>Safety</name></names>
+    </partitions>
+  </data_writer>
+
+  <!-- CORTICAL partition publishers -->
+  <data_writer profile_name="pub_cortical">
+    <qos>
+      <reliability><kind>RELIABLE_RELIABILITY_QOS</kind></reliability>
+      <history><kind>KEEP_LAST_HISTORY_QOS</kind><depth>5</depth></history>
+      <deadline><period><nanosec>50000000</nanosec></period></deadline>
+    </qos>
+    <partitions>
+      <names><name>Cortical</name><name>Safety</name></names>
+    </partitions>
+  </data_writer>
+
+  <!-- NEURO partition — hypothalamus broadcasts to ALL partitions -->
+  <data_writer profile_name="pub_neuro_broadcast">
+    <qos>
+      <reliability><kind>RELIABLE_RELIABILITY_QOS</kind></reliability>
+      <history><kind>KEEP_LAST_HISTORY_QOS</kind><depth>10</depth></history>
+      <deadline><period><sec>2</sec></period></deadline>
+    </qos>
+    <partitions>
+      <!-- Neuro topics reach ALL partitions — neuromodulators are global -->
+      <names>
+        <name>Limbic</name>
+        <name>Visual</name>
+        <name>Motor</name>
+        <name>Cortical</name>
+        <name>Neuro</name>
+        <name>Safety</name>
+      </names>
+    </partitions>
+  </data_writer>
+
+  <!-- SAFETY cross-cut — emergency signals reach ALL -->
+  <data_writer profile_name="pub_safety">
+    <qos>
+      <reliability><kind>RELIABLE_RELIABILITY_QOS</kind></reliability>
+      <history><kind>KEEP_LAST_HISTORY_QOS</kind><depth>1</depth></history>
+      <deadline><period><nanosec>5000000</nanosec></period></deadline>
+      <latencyBudget><duration><nanosec>500000</nanosec></duration></latencyBudget>
+    </qos>
+    <partitions>
+      <names>
+        <name>Limbic</name><name>Visual</name><name>Motor</name>
+        <name>Cortical</name><name>Neuro</name><name>Safety</name>
+      </names>
+    </partitions>
+  </data_writer>
+
+  <!-- ══════════════════════════════════════════════════════
+       SUBSCRIBER PROFILES — per node role
+  ══════════════════════════════════════════════════════ -->
+
+  <data_reader profile_name="sub_hippocampus">
+    <partitions><names><name>Limbic</name><name>Neuro</name><name>Safety</name></names></partitions>
+  </data_reader>
+
+  <data_reader profile_name="sub_amygdala">
+    <partitions><names>
+      <name>Limbic</name><name>Visual</name><name>Neuro</name><name>Safety</name>
+    </names></partitions>
+  </data_reader>
+
+  <data_reader profile_name="sub_visual">
+    <partitions><names><name>Visual</name><name>Neuro</name><name>Safety</name></names></partitions>
+  </data_reader>
+
+  <data_reader profile_name="sub_cerebellum">
+    <partitions><names>
+      <name>Motor</name><name>Cortical</name><name>Neuro</name><name>Safety</name>
+    </names></partitions>
+  </data_reader>
+
+  <data_reader profile_name="sub_pfc">
+    <partitions><names>
+      <name>Cortical</name><name>Limbic</name><name>Neuro</name><name>Safety</name>
+    </names></partitions>
+  </data_reader>
+
+  <data_reader profile_name="sub_thalamus">
+    <partitions><names>
+      <!-- Thalamus receives from ALL — it is the relay nucleus -->
+      <name>Limbic</name><name>Visual</name><name>Motor</name>
+      <name>Cortical</name><name>Neuro</name><name>Safety</name>
+    </names></partitions>
+  </data_reader>
+
+  <data_reader profile_name="sub_hypothalamus">
+    <partitions><names>
+      <!-- Hypothalamus monitors everything for homeostasis -->
+      <name>Limbic</name><name>Visual</name><name>Motor</name>
+      <name>Cortical</name><name>Neuro</name><name>Safety</name>
+    </names></partitions>
+  </data_reader>
+
+  <data_reader profile_name="sub_spinal">
+    <partitions><names><name>Motor</name><name>Neuro</name><name>Safety</name></names></partitions>
+  </data_reader>
+
+  <data_reader profile_name="sub_insula">
+    <partitions><names>
+      <name>Motor</name><name>Limbic</name><name>Neuro</name><name>Safety</name>
+    </names></partitions>
+  </data_reader>
+
+    <partitions><names>
+      <name>Cortical</name><name>Limbic</name><name>Neuro</name><name>Safety</name>
+    </names></partitions>
+  </data_reader>
+
+  <data_reader profile_name="sub_association">
+    <partitions><names>
+      <name>Cortical</name><name>Visual</name><name>Limbic</name>
+      <name>Neuro</name><name>Safety</name>
+    </names></partitions>
+  </data_reader>
+
+</profiles>

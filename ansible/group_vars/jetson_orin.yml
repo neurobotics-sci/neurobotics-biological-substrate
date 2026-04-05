@@ -1,0 +1,8 @@
+---
+# Orin nodes: High-Road (VLAN 10) + Management (VLAN 40)
+node_vlan_10: true
+node_vlan_20: false
+node_vlan_30: false
+cuda_arch: sm_87
+torch_cuda_arch: "8.7"
+nvpmodel_mode: 2      # 15W mode

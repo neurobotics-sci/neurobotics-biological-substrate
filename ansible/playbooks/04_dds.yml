@@ -1,0 +1,10 @@
+---
+- name: "Bubo v50.0 — 04_dds"
+  hosts: all_brain
+  become: true
+  tasks:
+    - include_role:
+        name: dds
+  handlers:
+    - name: reload systemd
+      systemd: daemon_reload=yes

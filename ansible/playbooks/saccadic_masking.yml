@@ -1,0 +1,18 @@
+---
+- name: "Bubo v5900 — Saccadic Masking on Visual/Auditory nodes"
+  hosts: visual:auditory
+  become: true
+  tasks:
+    - name: Verify saccadic masking module deployed
+      command: >
+        python3 -c "import sys; sys.path.insert(0,'/opt/bubo');
+        from bubo.saccadic_masking.saccadic_masking import SaccadicMaskingController;
+        m=SaccadicMaskingController('test');
+        print(f'ok: {m.stats()}')"
+      register: masking_check
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Report masking status
+      debug:
+        msg: "Saccadic masking: {{ masking_check.stdout | default('not available') }}"

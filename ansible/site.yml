@@ -1,0 +1,21 @@
+---
+# Bubo v6500 — 21-Node Master Playbook (adds AGX Orin 64GB)
+- import_playbook: playbooks/00_preflight.yml
+- import_playbook: playbooks/01_common.yml
+- import_playbook: playbooks/02_vlan.yml
+- import_playbook: playbooks/03_ptp.yml
+- import_playbook: playbooks/04_dds.yml
+- import_playbook: playbooks/dds_partitions.yml
+- import_playbook: playbooks/05_cuda_sm87.yml
+- import_playbook: playbooks/05b_cuda_sm53.yml
+- import_playbook: playbooks/06_hypothalamus.yml
+- import_playbook: playbooks/07_thalamus_l.yml
+- import_playbook: playbooks/07b_thalamus_r.yml
+- import_playbook: playbooks/08_insula.yml
+- import_playbook: playbooks/12_sensory.yml
+- import_playbook: playbooks/13_cerebellum.yml
+- import_playbook: playbooks/14_basal_ganglia.yml
+- import_playbook: playbooks/15_spinal.yml
+- import_playbook: playbooks/vagus_nerve.yml
+- import_playbook: playbooks/saccadic_masking.yml
+- import_playbook: playbooks/19_verify.yml

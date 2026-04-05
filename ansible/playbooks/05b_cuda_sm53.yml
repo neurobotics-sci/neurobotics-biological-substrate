@@ -1,0 +1,10 @@
+---
+- name: "Bubo v50.0 — 05b_cuda_sm53"
+  hosts: jetson_nano_4gb:jetson_nano_2gb
+  become: true
+  tasks:
+    - include_role:
+        name: cuda_sm53
+  handlers:
+    - name: reload systemd
+      systemd: daemon_reload=yes

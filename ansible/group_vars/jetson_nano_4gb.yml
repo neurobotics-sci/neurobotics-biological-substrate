@@ -1,0 +1,6 @@
+---
+node_vlan_10: true
+node_vlan_20: false
+node_vlan_30: false
+cuda_arch: sm_53
+torch_cuda_arch: "5.3"

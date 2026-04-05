@@ -1,0 +1,42 @@
+# Bubo v10000 — Complete Requirements
+# ─── Core (required on all nodes) ───────────────────────────────────────────
+pyzmq>=25.0
+msgpack>=1.0
+numpy>=1.24
+scipy>=1.10
+pyyaml>=6.0
+requests>=2.28
+
+# ─── Memory / vector search ──────────────────────────────────────────────────
+faiss-cpu>=1.7         # or faiss-gpu on GPU nodes
+sqlite3                # stdlib, no install needed
+
+# ─── LLM (local inference) ───────────────────────────────────────────────────
+# llama-cpp-python>=0.2   # optional: Python bindings for llama.cpp
+# The primary local LLM path uses llama-server (separate binary, see INSTALL.md)
+
+# ─── Speech ──────────────────────────────────────────────────────────────────
+# piper-tts                # TTS (install separately: https://github.com/rhasspy/piper)
+
+# ─── Cloud / AWS ─────────────────────────────────────────────────────────────
+boto3>=1.26            # AWS SDK (aws_local and aws_api profiles only)
+
+# ─── Web gateway (cloud profiles) ───────────────────────────────────────────
+flask>=3.0
+flask-socketio>=5.3
+eventlet>=0.33
+
+# ─── Hardware (Jetson only) ──────────────────────────────────────────────────
+# dynamixel_sdk          # pip install dynamixel-sdk  (hardware profiles only)
+# Adafruit_BBIO          # BeagleBone GPIO (spinal_legs, sup_colliculus nodes only)
+
+# ─── Computer vision (sensory nodes) ─────────────────────────────────────────
+# opencv-python>=4.8     # visual node (install separately: apt install python3-opencv)
+# Pillow>=10.0           # image processing
+
+# ─── Optional: RTABMap bridge ────────────────────────────────────────────────
+# rtabmap_ros            # Install via ROS2 package manager, not pip
+
+# Install with:
+#   pip install -r requirements.txt --break-system-packages
+#   For GPU nodes: pip install faiss-gpu instead of faiss-cpu
