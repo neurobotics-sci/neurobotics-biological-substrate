@@ -319,9 +319,9 @@ class CMACCerebellumNode:
     HZ = 100
     WEIGHT_SAVE_INTERVAL = 300   # seconds
 
-    def __init__(self, config: dict):
+    def __init__(self, bus):
         self.name = "CMAC_Cerebellum"
-        self.bus  = NeuralBus(self.name, config["pub_port"], config["sub_endpoints"])
+        self.bus = bus
         self.cmac = CMACController()
         # Limp mode still uses JacobianStore as fallback for truly novel states
         self._jac  = JacobianStore()

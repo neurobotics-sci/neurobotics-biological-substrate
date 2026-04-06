@@ -17,10 +17,16 @@ class CerebellumNodeV6500:
     """Integrates CMAC + MPC + PPO into unified cerebellar output."""
     HZ = 50
 
+    # Notice: No 'bus' in the parameters here. The Parent is the boss.
     def __init__(self, config: dict):
-        self.name   = "Cerebellum"
-        self.bus    = NeuralBus(self.name, config["pub_port"], config["sub_endpoints"])
-        self.cmac   = CMACCerebellumNode(config)
+        self.name = "Cerebellum"
+
+        # 1. FIRST, we build the bus.
+        self.bus = NeuralBus(self.name, config["pub_port"], config["sub_endpoints"])
+
+        # 2. THEN, we pass that newly built bus to the CMAC.
+        self.cmac = CMACCerebellumNode(self.bus)
+
         self.mpc    = MPCBalanceController(self.bus)
         self.ppo    = PPOGaitLearner(self.bus)
         self._imu   = {"accel":[0,0,9.81],"gyro":[0,0,0],"jerk_mag":0,"dt":0.01}
