@@ -17,8 +17,8 @@ THAL_L_TIMEOUT = 150.0  # ms
 
 
 class ThalamicRNode:
-    HZ = 100
-    HB_HZ = 20
+    HZ = 10
+    HB_HZ = 2
 
     def __init__(self, config: dict):
         self.name = "Thalamus-R"
@@ -113,16 +113,18 @@ class ThalamicRNode:
                 "certainty":       effective_certainty,
                 "social_da_boost": da_b,
                 "social_bond":     bond,
-                "cea_modulation":  float(1.0 - cea * 0.3),  # fear reduces motor drive
+                #"cea_modulation":  float(1.0 - cea * 0.3),  # fear reduces motor drive - but not without an amygdala!
+                "cea_modulation":  1.0,  # fear severed for sterile chassis
                 "timestamp_ns":    time.time_ns(),
             })
 
             # MD nucleus: PFC ↔ limbic bidirectional relay
-                self.bus.publish(T.THAL_SENSORY, {
-                    "amyg_cea":       cea,
-                    "social_context": {"bond": bond, "da_boost": da_b},
-                    "timestamp_ns":   time.time_ns(),
-                })
+            self.bus.publish(T.THAL_SENSORY, {
+                #"amyg_cea":       cea, # Set to 0.0 when a droid - no amygdala equals no fear
+                "amyg_cea":       0.0,
+                "social_context": {"bond": bond, "da_boost": da_b},
+                "timestamp_ns":   time.time_ns(),
+            })
 
             # Reuniens nucleus: hippocampus context → PFC
             if sp or hctx:
@@ -149,7 +151,7 @@ class ThalamicRNode:
         self.bus.subscribe(T.HIPPO_CONTEXT,   self._on_hippo)
         self.bus.subscribe(T.HIPPO_PLACE,     self._on_hippo)
         self.bus.subscribe(T.AMYG_CEA_OUT,   self._on_cea)
-        self.bus.subscribe(T.SOCIAL_BOND,     self._on_social_bond)
+        #self.bus.subscribe(T.SOCIAL_BOND,     self._on_social_bond) # Nothing to bond to in 5-tier droid
         self.bus.subscribe(T.THAL_HB,         self._on_thal_l_hb)
         self.bus.subscribe(T.VISUAL_V1,       self._on_vis_backup)
         self._running = True

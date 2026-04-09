@@ -38,8 +38,8 @@ class ThalamicRelay:
 
 
 class ThalamicLNode:
-    HZ = 100
-    HB_HZ = 20
+    HZ = 10
+    HB_HZ = 2
 
     def __init__(self, config: dict):
         self.name  = "Thalamus-L"
@@ -161,7 +161,7 @@ class ThalamicLNode:
         self.bus.subscribe(T.SC_SACCADE,         self._on_sc)
         self.bus.subscribe(T.CTX_ATTENTION,      self._on_attention)
         self.bus.subscribe(T.SYS_CIRCADIAN,      self._on_circadian)
-        self.bus.subscribe(T.SOCIAL_THREAT_MOD,  self._on_social_threat)
+#         self.bus.subscribe(T.SOCIAL_THREAT_MOD,  self._on_social_threat)
         self.bus.subscribe(T.THAL_HB,            self._on_thal_r_hb)
         self._running = True
         threading.Thread(target=self._relay_loop, daemon=True).start()

@@ -8,7 +8,7 @@ from bubo.shared.reflexes.spinal_reflexes import FlexorWithdrawalReflex
 logger=logging.getLogger("SpinalArms")
 
 class SpinalArmsNode:
-    HZ=100; HB_INTERVAL=1.0/100  # publish heartbeat at 100Hz
+    HZ=10; HB_INTERVAL=1.0/10  # publish heartbeat at 10Hz
 
     def __init__(self,config):
         self.name="SpinalArms"
@@ -21,10 +21,10 @@ class SpinalArmsNode:
         self._limp_l=None;self._limp_r=None
         self._resting=False;self._running=False;self._lock=threading.Lock()
 
-        m=msg.payload.get("motor",{})
+#         m=msg.payload.get("motor",{})
         with self._lock:
-            self._cmd_l=np.resize(np.array(m.get("arm_l",self._cmd_l.tolist())),7)
-            self._cmd_r=np.resize(np.array(m.get("arm_r",self._cmd_r.tolist())),7)
+            pass
+#             self._cmd_r=np.resize(np.array(m.get("arm_r",self._cmd_r.tolist())),7)
 
     def _on_cerb(self,msg):
         ac=msg.payload.get("arm_correction",[0]*14)

@@ -87,7 +87,8 @@ class NeuralBus:
         self.sub.setsockopt(zmq.RCVBUF,8*1024*1024);self.sub.setsockopt(zmq.RCVTIMEO,50)
         for ep in sub_endpoints: self.sub.connect(ep)
     def subscribe(self,topic,handler):
-        self.sub.setsockopt(zmq.SUBSCRIBE,topic);self._handlers.setdefault(topic,[]).append(handler)
+        # Use the string-safe helper provided by pyzmq
+        self.sub.setsockopt_string(zmq.SUBSCRIBE, str(topic));self._handlers.setdefault(topic,[]).append(handler)
     def publish(self,topic,payload,target="broadcast",phase=None):
         now=time.time_ns()
         msg=NeuralMessage(topic=topic.decode(),timestamp_ms=now/1e6,timestamp_ns=now,

@@ -4,6 +4,18 @@
 export PYTHONPATH=$(pwd)
 mkdir -p /tmp/bubo_logs
 
+# Surgical 5-Tier Baseline (Sensory Relay Focus)
+MODULES=(
+  "bubo.nodes.subcortical.hypothalamus.hypothalamus_node"
+  "bubo.nodes.thalamus.core_l.thalamus_l_node"
+  "bubo.nodes.thalamus.core_r.thalamus_r_node"
+  "bubo.nodes.subcortical.basal_ganglia.basal_ganglia_node"
+  "bubo.nodes.subcortical.cerebellum.cerebellum_node"
+  "bubo.nodes.sensory.somatosensory.s1_node"
+)
+
+: <<'END_COMMENT'
+# Full set of modules 
 # The ethically sterile 5-Tier nodes (PFC, Broca, Social, LLM severed)
 MODULES=(
   "bubo.nodes.subcortical.hypothalamus.hypothalamus_node"
@@ -23,11 +35,12 @@ MODULES=(
   "bubo.nodes.spinal.arms.spinal_arms_node"
   "bubo.nodes.spinal.legs.spinal_legs_node"
 )
+END_COMMENT
 
 echo "Igniting 5-Tier Sterile Chassis on Bare Metal (Localhost)..."
 for mod in "${MODULES[@]}"; do
     name=$(echo "$mod" | awk -F. '{print $NF}')
-    nohup python3 -m "$mod" > "/tmp/bubo_logs/${name}.log" 2>&1 &
+    nohup python3 -u -m "$mod" > "/tmp/bubo_logs/${name}.log" 2>&1 &
     echo "  ✓ Launched $name (PID $!)"
 done
 

@@ -13,6 +13,8 @@ from collections import deque
 from bubo.shared.bus.neural_bus import NeuralBus, T
 from bubo.shared.watchdog.node_watchdog import NodeWatchdog
 
+logging.basicConfig(level=logging.INFO, format='%(name)s - %(levelname)s - %(message)s')
+
 logger = logging.getLogger("BasalGanglia")
 
 ACTIONS = [
@@ -143,7 +145,7 @@ class BasalGangliaNode:
         iv = 1.0 / self.HZ
         while self._running:
             t0 = time.time()
-            self.wd.heartbeat()
+# #             self.wd.heartbeat()
             result = self._select()
             now_ns = time.time_ns()
 
@@ -181,7 +183,7 @@ class BasalGangliaNode:
 
 
 if __name__ == "__main__":
-    with open("/etc/bubo/config.json") as f: cfg=json.load(f)["basal_ganglia"]
+    with open("config/cluster_config.json") as f: cfg=json.load(f)["basal_ganglia"]
     n=BasalGangliaNode(cfg); n.start()
     try:
         while True: time.sleep(1)

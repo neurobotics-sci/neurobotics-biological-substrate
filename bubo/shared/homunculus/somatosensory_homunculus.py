@@ -185,7 +185,7 @@ class SomatosensoryHomunculus:
     def update_hand(self, side: str, hand_state: dict, dt: float):
         """
         Update hand zones from OmniHand state dict.
-        Called from spinal-arms node at 100Hz.
+        Called from spinal-arms node at 10Hz.
         """
         pressures = hand_state.get("pressures", [[0]*4]*4)
         temps     = hand_state.get("temps_C", [25]*4)

@@ -316,7 +316,7 @@ class CMACCerebellumNode:
       Saved every 300s. Loaded at startup for warm-start.
     """
 
-    HZ = 100
+    HZ = 10
     WEIGHT_SAVE_INTERVAL = 300   # seconds
 
     def __init__(self, bus):

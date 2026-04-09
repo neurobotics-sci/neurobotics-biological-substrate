@@ -110,7 +110,7 @@ class HypothalamusNode:
 
             # Use thermal loop's motor_inhibit
             motor_inhibit  = thermal.motor_inhibit
-            pub_rate_scale = thermal.pub_scale
+            pub_rate_scale = thermal._pub_scale
             thermal_stress = float(np.clip((cpu_C - 55)/30, 0, 1))
             hunger         = float(np.clip(1.0 - bf*1.2, 0, 1))
             stressor       = float(np.clip(0.3*thermal_stress + 0.25*hunger + 0.3*fear, 0, 1))

@@ -8,8 +8,6 @@
   ],
   "_removed_reason": "Functions absorbed into PFC-L/BG/SC/Thalamus-R to save ~$360 BOM",
   "nodes": {
-<<<<<<< HEAD
-=======
     "pfc-l": {
       "ip": "127.0.0.1",
       "port": 5600,
@@ -30,7 +28,6 @@
         40
       ]
     },
->>>>>>> 21f1f3b (Bring up of CMAC, Cerebellum, Thalamus, and Somatosensory nodes and test 'tickle' or 'poke' pathways)
     "hypothalamus": {
       "ip": "127.0.0.1",
       "port": 5602,
@@ -52,8 +49,6 @@
         40
       ]
     },
-<<<<<<< HEAD
-=======
     "broca": {
       "ip": "127.0.0.1",
       "port": 5604,
@@ -64,7 +59,6 @@
         40
       ]
     },
->>>>>>> 21f1f3b (Bring up of CMAC, Cerebellum, Thalamus, and Somatosensory nodes and test 'tickle' or 'poke' pathways)
     "insula": {
       "ip": "127.0.0.1",
       "port": 5605,
@@ -87,8 +81,6 @@
         40
       ]
     },
-<<<<<<< HEAD
-=======
     "social": {
       "ip": "127.0.0.1",
       "port": 5609,
@@ -99,7 +91,6 @@
         40
       ]
     },
->>>>>>> 21f1f3b (Bring up of CMAC, Cerebellum, Thalamus, and Somatosensory nodes and test 'tickle' or 'poke' pathways)
     "hippocampus": {
       "ip": "127.0.0.1",
       "port": 5620,
@@ -220,8 +211,6 @@
         40
       ]
     },
-<<<<<<< HEAD
-=======
     "agx-orin": {
       "ip": "127.0.0.1",
       "port": 5699,
@@ -236,7 +225,6 @@
       "ram_gb": 64,
       "price_usd": 999
     }
->>>>>>> 21f1f3b (Bring up of CMAC, Cerebellum, Thalamus, and Somatosensory nodes and test 'tickle' or 'poke' pathways)
   },
   "pfc_l": {
     "pub_port": 5600,
@@ -338,8 +326,6 @@
       "tcp://127.0.0.1:5699"
     ]
   },
-<<<<<<< HEAD
-=======
   "broca": {
     "pub_port": 5604,
     "sub_endpoints": [
@@ -365,7 +351,6 @@
       "tcp://127.0.0.1:5699"
     ]
   },
->>>>>>> 21f1f3b (Bring up of CMAC, Cerebellum, Thalamus, and Somatosensory nodes and test 'tickle' or 'poke' pathways)
   "insula": {
     "pub_port": 5605,
     "sub_endpoints": [
@@ -416,8 +401,6 @@
       "tcp://127.0.0.1:5699"
     ]
   },
-<<<<<<< HEAD
-=======
   "social": {
     "pub_port": 5609,
     "sub_endpoints": [
@@ -443,7 +426,6 @@
       "tcp://127.0.0.1:5699"
     ]
   },
->>>>>>> 21f1f3b (Bring up of CMAC, Cerebellum, Thalamus, and Somatosensory nodes and test 'tickle' or 'poke' pathways)
   "hippocampus": {
     "pub_port": 5620,
     "sub_endpoints": [
@@ -569,8 +551,6 @@
       "tcp://127.0.0.1:5699"
     ]
   },
-<<<<<<< HEAD
-=======
   "ltm_store": {
     "pub_port": 5643,
     "sub_endpoints": [
@@ -596,7 +576,6 @@
       "tcp://127.0.0.1:5699"
     ]
   },
->>>>>>> 21f1f3b (Bring up of CMAC, Cerebellum, Thalamus, and Somatosensory nodes and test 'tickle' or 'poke' pathways)
   "visual": {
     "pub_port": 5630,
     "sub_endpoints": [

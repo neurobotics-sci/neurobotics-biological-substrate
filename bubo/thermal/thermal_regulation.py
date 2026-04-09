@@ -261,3 +261,6 @@ class ThermalRegulationLoop:
     def motor_inhibit(self) -> float: return self._motor_inhibit
     @property
     def level(self) -> str: return self._thermal_level
+    @property
+    def pub_scale(self) -> float: 
+        return self._pub_scale

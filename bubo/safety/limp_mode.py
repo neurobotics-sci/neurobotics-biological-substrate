@@ -122,7 +122,7 @@ class LimpModeController:
              arm_joints: Optional[np.ndarray] = None,
              leg_joints: Optional[np.ndarray] = None) -> dict:
         """
-        Called every cerebellum control cycle (100 Hz).
+        Called every cerebellum control cycle (10 Hz).
         Returns limp mode status and any direct motor commands.
         """
         with self._lock:

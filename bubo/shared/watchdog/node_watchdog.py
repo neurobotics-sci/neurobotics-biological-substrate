@@ -51,6 +51,16 @@ class NodeWatchdog:
         signal.signal(signal.SIGTERM, self._on_sigterm)
         signal.signal(signal.SIGINT,  self._on_sigterm)
 
+    def heartbeat(self):
+        """External hook to manually trigger a heartbeat or verify life."""
+        with self._lock:
+            uptime = time.time() - self._start_t
+            return {
+                "node": self.node_name,
+                "uptime_s": round(uptime, 1),
+                "status": "ok" if self._running else "stopped"
+            }
+
     def record_publish(self):
         """Call after each bus.publish(). Tracks publication rate."""
         with self._lock:
@@ -141,15 +151,17 @@ class WatchdogSupervisor:
     On missed heartbeat: SSH to the failed node, trigger systemd restart.
     """
 
+    """"""
     NODES = {
-        "hypothalamus":"192.168.1.12", "thalamus_l":   "192.168.1.13",
-        "parietal":    "192.168.1.16", "cingulate":     "192.168.1.17",
-        "hippocampus": "192.168.1.30", "amygdala":      "192.168.1.31",
-        "cerebellum":  "192.168.1.32", "basal_ganglia": "192.168.1.33",
-        "visual":      "192.168.1.50", "auditory":      "192.168.1.51",
-        "somatosensory":"192.168.1.52","spinal_arms":   "192.168.1.53",
-        "sup_colliculus":"192.168.1.60","spinal_legs":  "192.168.1.61",
+        "hypothalamus":"127.0.0.1", "thalamus_l": "127.0.0.1",
+        "thalamus_r": "127.0.0.1", "cerebellum": "127.0.0.1",
+        "basal_ganglia": "127.0.0.1", "somatosensory": "127.0.0.1"
     }
+    """_summary_
+
+    Returns:
+        _type_: _description_
+    """
     SSH_KEY = Path.home() / ".ssh/bubo_id_ed25519"
     TIMEOUT_S = 5.0   # 5s = 5 missed heartbeats
 

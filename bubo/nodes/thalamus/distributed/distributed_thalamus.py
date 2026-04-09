@@ -92,7 +92,7 @@ from bubo.shared.bus.neural_bus import NeuralBus, T
 
 logger = logging.getLogger("DistributedThalamus")
 
-HB_INTERVAL_S  = 0.05   # 20Hz heartbeat
+HB_INTERVAL_S  = 0.50  # 2Hz heartbeat
 HB_TIMEOUT_S   = 0.15   # 3 missed → failover
 
 # Nucleus assignment map — which relay node handles which nuclei

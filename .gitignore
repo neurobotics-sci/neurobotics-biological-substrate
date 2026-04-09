@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDEs and Workspaces
+*.code-workspace
+.vscode/
+
+# Logs and Databases
+*.log
+*.sqlite3
+
+# OS generated files
+.DS_Store
+Thumbs.db

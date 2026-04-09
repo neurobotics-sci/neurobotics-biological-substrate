@@ -331,7 +331,7 @@ class GaitEngine:
       - Arm swing targets embedded in T.EFF_M1_ARM_* via PFC efference
     """
 
-    HZ = 100   # 100 Hz control loop
+    HZ = 10   # 10 Hz control loop
 
     def __init__(self, config: dict):
         self.name = "GaitEngine"

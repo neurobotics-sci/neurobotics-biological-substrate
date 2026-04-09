@@ -8,14 +8,14 @@ import numpy as np
 from bubo.shared.bus.neural_bus import NeuralBus, T
 from bubo.nodes.subcortical.cerebellum.cmac_cerebellum import CMACCerebellumNode
 from bubo.balance.mpc.mpc_balance_controller import MPCBalanceController
-from bubo.rl.gait_rl.ppo_gait_learner import PPOGaitLearner
+# from bubo.rl.gait_rl.ppo_gait_learner import PPOGaitLearner
 
 logger = logging.getLogger("Cerebellum_v6500")
 
 
 class CerebellumNodeV6500:
     """Integrates CMAC + MPC + PPO into unified cerebellar output."""
-    HZ = 50
+    HZ = 10
 
     # Notice: No 'bus' in the parameters here. The Parent is the boss.
     def __init__(self, config: dict):
@@ -28,7 +28,7 @@ class CerebellumNodeV6500:
         self.cmac = CMACCerebellumNode(self.bus)
 
         self.mpc    = MPCBalanceController(self.bus)
-        self.ppo    = PPOGaitLearner(self.bus)
+#         self.ppo    = PPOGaitLearner(self.bus)
         self._imu   = {"accel":[0,0,9.81],"gyro":[0,0,0],"jerk_mag":0,"dt":0.01}
         self._depth = []
         self._com   = np.zeros(2)
@@ -93,24 +93,27 @@ class CerebellumNodeV6500:
                 "leg_joints":   legs + [0.0]*(21-len(legs)),
                 "prev_delta":   [],
             }
-            cpg_delta = self.ppo.get_cpg_delta(ppo_state)
+            cpg_delta = 0.0
 
             now_ns = time.time_ns()
             self.bus.publish(T.CEREBELL_DELTA, {
                 "arm_correction":  [0.0]*14,
                 "leg_correction":  [0.0]*12,
                 "mpc_balance":     mpc_out,
-                "cpg_delta":       cpg_delta.tolist(),
+                "cpg_delta": 0.0,
                 "stability":       stability,
                 "terrain_mode":    mpc_out.get("terrain_mode","flat"),
-                "ppo_scale":       self.ppo.action_scale,
+                "ppo_scale": 1.0,
                 "timestamp_ns":    now_ns,
             })
 
             # Periodic save
-            if time.time() - t_save > 300:
-                self.ppo.save(); t_save = time.time()
+            if time.time() - t_save > 60.0:  # Or whatever the save condition was
+                # self.ppo.save(); t_save = time.time()
+                pass  # <--- Add this line here to satisfy the indentation gods
 
+            # This MUST be back-indented to the same level as the 'if'
+            # If it is indented under 'if', it only sleeps once per minute!
             time.sleep(max(0, iv - (time.time() - t0)))
 
     def start(self):
@@ -125,12 +128,14 @@ class CerebellumNodeV6500:
 
     def stop(self):
         self._running = False
-        self.ppo.save()
+#         self.ppo.save()
         self.bus.stop()
 
 
 if __name__ == "__main__":
-    with open("/etc/bubo/config.json") as f: cfg=json.load(f)["cerebellum"]
+    # Point back to the root level "cerebellum" key for the routing endpoints
+    with open("config/cluster_config.json") as f: 
+        cfg = json.load(f)["cerebellum"]
     n = CerebellumNodeV6500(cfg); n.start()
     try:
         while True: time.sleep(1)
