@@ -12,6 +12,7 @@ MODULES=(
   "bubo.nodes.subcortical.basal_ganglia.basal_ganglia_node"
   "bubo.nodes.subcortical.cerebellum.cerebellum_node"
   "bubo.nodes.sensory.somatosensory.s1_node"
+  "bubo.nodes.motor.m1_node"
 )
 
 : <<'END_COMMENT'
