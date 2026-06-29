@@ -1,0 +1,61 @@
+---
+# ansible/site_hardware.yml
+# Master playbook for local hardware deployment.
+#
+
+- name: "Brain — Bootstrap all hardware nodes"
+  hosts: all
+  become: true
+  gather_facts: true
+  tags: [bootstrap, always]
+  roles:
+    - common
+
+- name: "Brain — Homeostatic tier (hypothalamus, thalami, insula)"
+  hosts: homeostatic
+  become: true
+  tags: [homeostatic, tier1]
+  roles:
+    - brain_node
+
+- name: "Brain — Limbic tier (amygdala, hippocampus)"
+  hosts: limbic
+  become: true
+  tags: [limbic, tier2]
+  roles:
+    - brain_node
+
+- name: "Brain — Motor tier (cerebellum, BG, M1, premotor)"
+  hosts: motor
+  become: true
+  tags: [motor, tier5]
+  roles:
+    - brain_node
+
+- name: "Brain — Cortical tier (PFC-L, PFC-R)"
+  hosts: cortical
+  become: true
+  tags: [cortex, tier7]
+  roles:
+    - brain_node
+
+- name: "Brain — Spinal tier (arms, legs)"
+  hosts: spinal
+  become: true
+  tags: [spinal]
+  roles:
+    - brain_node
+
+- name: "Brain — Verify deployment"
+  hosts: all
+  become: false
+  tags: [verify, always]
+  tasks:
+    - name: Check Python and ZMQ
+      command: "{{ brain_venv }}/bin/python -c 'import zmq; print(\"zmq\", zmq.__version__)'"
+      register: zmq_check
+      changed_when: false
+      ignore_errors: true
+    - name: Deployment summary
+      debug:
+        msg: "{{ inventory_hostname }}: {{ zmq_check.stdout | default('zmq check failed') }}"

@@ -1,0 +1,11 @@
+# SBALF — requirements_armv7l.txt (Tier 1 BeagleBone Spinal Nodes)
+
+# ─── Core (Lightweight only) ───────────────────────────────────────────────
+pyzmq>=25.0
+msgpack>=1.0
+pyyaml>=6.0
+requests>=2.28
+
+# ─── Serial & Low-Level Hardware IO ────────────────────────────────────────
+pyserial                 # RS232 / USB serial down to microcontrollers
+gpiod                    # BeagleBone modern native GPIO access

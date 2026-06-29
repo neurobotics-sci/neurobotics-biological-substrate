@@ -1,0 +1,17 @@
+{
+  "node_role":    "{{ brain_role }}",
+  "pub_port":     {{ brain_port }},
+  "profile":      "{{ brain_profile | default('hardware_local') }}",
+  "version":      "{{ brain_version | default('16.0') }}",
+  "llm_backend":  "{{ llm_tag | default('llm_local') | replace('llm_','') }}",
+  "sub_endpoints": [
+{% set endpoints = [] %}
+{% for host in groups['jetson_nano'] | union(groups['x86_core']) %}
+  {% if host != inventory_hostname and hostvars[host]['brain_port'] is defined %}
+    {% set _ = endpoints.append('    "tcp://' ~ hostvars[host]['ansible_host'] ~ ':' ~ hostvars[host]['brain_port'] ~ '"') %}
+  {% endif %}
+{% endfor %}
+{{ endpoints | join(',\n') }}
+  ]
+}
+

@@ -1,0 +1,17 @@
+# SBALF — requirements_aarch64.txt (Tier 3-5 Jetson Nodes)
+
+# ─── Core ──────────────────────────────────────────────────────────────────
+pyzmq>=25.0
+msgpack>=1.0
+pyyaml>=6.0
+requests>=2.28
+
+# ─── Edge Processing & Hardware ────────────────────────────────────────────
+numpy
+pyserial
+dynamixel_sdk            # Motor control SDK for physical actuation
+whisper
+
+# ─── Vision (Optional / Handled by OS) ─────────────────────────────────────
+Pillow>=10.0               
+opencv-python-headless>=4.8     # NOTE: Recommend 'apt install python3-opencv' instead of pip

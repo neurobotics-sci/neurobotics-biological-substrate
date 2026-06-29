@@ -1,0 +1,15 @@
+gcc
+gcc-c++
+make
+cmake
+htop
+tmux
+jq
+tar
+unzip
+podman
+podman-compose
+ncurses-compat-libs
+libnsl
+python3-devel
+openssl-devel

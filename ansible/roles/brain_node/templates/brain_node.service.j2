@@ -1,0 +1,22 @@
+[Unit]
+Description=Brain Brain Node — {{ brain_role }}
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=brain
+WorkingDirectory={{ brain_home }}/src
+EnvironmentFile=/etc/brain/identity
+EnvironmentFile=/etc/brain/env
+Environment=PYTHONPATH={{ brain_home }}/src
+Environment=BRAIN_ROLE={{ brain_role }}
+ExecStart={{ brain_venv }}/bin/python -m brain.nodes.{{ brain_role | replace('-','_') }}
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=60
+StandardOutput=append:/var/log/brain/{{ brain_role }}.log
+StandardError=append:/var/log/brain/{{ brain_role }}.err
+
+[Install]
+WantedBy=multi-user.target

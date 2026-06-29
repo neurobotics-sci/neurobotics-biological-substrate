@@ -1,0 +1,30 @@
+[Unit]
+Description=Brain node {{ brain_role }} — v50.0
+After=network.target ptp4l.service
+Wants=network.target
+
+[Service]
+Type=simple
+User=brain
+WorkingDirectory=/opt/brain/sbalf-core
+
+# Standard Env
+Environment="PYTHONUNBUFFERED=1"
+Environment="PYTHONPATH=/opt/brain/sbalf-core"
+
+# Custom Env Overrides (like OPENBLAS_CORETYPE)
+{% if node_env_overrides is defined %}
+{% for key, value in node_env_overrides.items() %}
+Environment="{{ key }}={{ value }}"
+{% endfor %}
+{% endif %}
+
+# The Execution Command
+ExecStart=/opt/brain/venv/bin/python3 -m {{ node_module | default('brain.nodes.' + brain_role) }} {{ node_args | default('') }}
+
+Restart=always
+RestartSec=10
+TimeoutStartSec=60
+
+[Install]
+WantedBy=multi-user.target

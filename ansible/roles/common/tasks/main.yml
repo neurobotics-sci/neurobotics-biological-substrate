@@ -1,0 +1,165 @@
+# ansible/roles/common/tasks/main.yml
+# Bootstrap tasks applied to every node in every profile.
+
+- name: Update apt cache (Bypass Python 3.6 trap)
+  command: apt-get update
+  become: true
+  changed_when: false
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Install system packages (Bypass Python 3.6 trap)
+  shell: >
+    DEBIAN_FRONTEND=noninteractive apt-get install -y
+    {{ base_packages | join(' ') }}
+    {{ 'python3-opencv' if 'spinal' not in group_names else '' }}
+  become: true
+  register: apt_install
+  changed_when: "'upgraded, ' in apt_install.stdout and ' 0 newly installed' not in apt_install.stdout"
+  when: ansible_facts['os_family'] == 'Debian'
+  vars:
+    base_packages:
+      - python3-pip
+      - python3-venv
+      - python3-dev
+      - build-essential
+      - git
+      - curl
+      - wget
+      - htop
+      - tmux
+      - libzmq3-dev
+      - libssl-dev
+      - python3-zmq     # Native PyZMQ
+      - python3-numpy   # Native NumPy
+
+- name: Create brain user
+  user:
+    name: brain
+    shell: /bin/bash
+    create_home: true
+    # FIX: Dynamically use 'wheel' for RHEL and 'sudo' for Debian
+    groups: "{{ ['wheel'] if ansible_facts['os_family'] == 'RedHat' else ['sudo'] }}"
+    append: true
+
+- name: Create directory structure
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: brain
+    mode: '0755'
+  loop:
+    - "{{ brain_home }}"
+    - "{{ brain_home }}/data"
+    - "{{ brain_home }}/models"
+    - "{{ brain_home }}/logs"
+    - "/etc/brain/{{ brain_role }}"
+    - /etc/brain/{{brain_role }}/tls
+    - /etc/brain/secrets
+    - /var/log/brain
+
+- name: Push SBALF Codebase from Perforce Workspace to Edge Nodes
+  ansible.posix.synchronize:
+    src: /home/kenneth/p4/kenneth-p4-main/
+    dest: "{{ brain_home }}/sbalf-core/"
+    recursive: yes
+    delete: yes
+    # Dynamically inject the models exclusion ONLY for the spinal group
+    rsync_opts: "{{
+      [
+        '--exclude=.p4config',
+        '--exclude=.git',
+        '--exclude=__pycache__',
+        '--exclude=*.log',
+        '--exclude=venv/',
+        '--exclude=*.egg-info/',
+        '--exclude=.idea/',
+        '--exclude=.Xil/',
+        '--exclude=SBALF_Convo*/',
+        '--exclude=models/llm/',
+        '--exclude=models/vision/'
+      ]
+      }}"
+
+- name: Fix SBALF Codebase Permissions (Post-Rsync)
+  file:
+    path: "{{ brain_home }}/sbalf-core"
+    state: directory
+    owner: brain
+    group: brain
+    recurse: yes
+
+- name: Ensure brain user owns the pushed SBALF codebase
+  ansible.builtin.file:
+    path: "{{ brain_home }}/sbalf-core/"
+    owner: brain
+    group: brain
+    recurse: yes
+    mode: 'u=rwX,g=rX,o=rX'
+
+- name: Create Python virtualenv
+  command:
+    cmd: "{{ ansible_python_interpreter }} -m venv --system-site-packages {{ brain_venv }}"
+    creates: "{{ brain_venv }}/bin/activate"
+  become_user: brain
+
+- name: Upgrade core Python build tools
+  command: >
+    {{ brain_venv }}/bin/python3 -m pip install --upgrade pip setuptools wheel packaging
+  become_user: brain
+
+- name: Install Python dependencies (Architecture Specific)
+  command: >
+    {{ brain_venv }}/bin/python3 -m pip install -r 
+    {{ brain_home }}/sbalf-core/requirements_{{ ansible_architecture }}.txt
+  become_user: brain
+
+- name: Install Brain package (editable)
+  command: >
+    {{ brain_venv }}/bin/python3 -m pip install -e {{ brain_home }}/sbalf-core --no-deps
+  become_user: brain
+
+- name: Write node identity
+  copy:
+    dest: /etc/brain/{{ brain_role }}/identify
+    content: |
+      BRAIN_ROLE={{ brain_role | default('unknown') }}
+      BRAIN_PROFILE={{ brain_profile | default('hardware_local') }}
+      BRAIN_VERSION={{ brain_version | default('9000') }}
+    owner: brain
+    mode: '0644'
+
+- name: Write BRAIN_PROFILE to environment
+  lineinfile:
+    path: /etc/brain/{{ brain_role }}/env
+    line: "BRAIN_PROFILE={{ brain_profile | default('hardware_local') }}"
+    create: true
+
+- name: Generate self-signed TLS certificate
+  command: >
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048
+    -keyout /etc/brain/{{ brain_role }}/tls/key.pem
+    -out /etc/brain/{{ brain_role }}/tls/cert.pem
+    -subj "/CN=brain.local/O=Brain/C=US"
+  args:
+    creates: /etc/brain/{{ brain_role }}/tls/cert.pem
+
+#- name: 🧠 Deploy Vision Models (Sensory Tier)
+#  ansible.posix.synchronize:
+#    src: "{{ playbook_dir }}/../models/vision/"
+#    dest: "{{ brain_home }}/models/"
+#    archive: yes
+#  when: brain_role == 'visual'
+
+- name: 🗣️ Deploy TTS Models (Speech/Hearing Tier)
+  ansible.posix.synchronize:
+    src: "{{ playbook_dir }}/../models/tts/"
+    dest: "{{ brain_home }}/models/"
+    archive: yes
+  when: brain_role in ['auditory', 'broca', 'cochlear_nerve']
+
+#- name: 📚 Deploy LLM Models (Cognitive Tier)
+#  ansible.posix.synchronize:
+#    src: "{{ playbook_dir }}/../models/llm/"
+#    dest: "{{ brain_home }}/models/"
+#    archive: yes
+#  when: brain_role == 'llm'
