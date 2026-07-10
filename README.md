@@ -37,7 +37,7 @@ Commercial licensing available separately.
 
 For more information contact us at info@neuroboticssci.ai
 
-https://github.com/neurobotics-sci/neurobotics-biological-substrate/blob/main/LICENSE
+https://github.com/neurobotics-sci/neurobotics-biological-substrate/blob/main/LICENSE.md
 
 Section 3. Getting Started - Ansible codebase deployment
 ========================================================
