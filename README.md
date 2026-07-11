@@ -1,8 +1,15 @@
-# SBALF OSS Edition
+# SBALF OSS Edition - Bubo Mark XVII Chassis Revision
+# ===================================================
 
+NOTE:
+=====
+
+Developed under DISA STIG-compliant Perforce; GitHub carries public OSS drops only.
 This represents the released codebase for the Bubo Mark XVI Hardware version.
+For more information contact kenneth.renshaw@neuroboticssci.ai or info@neuroboticssci.ai.
 
 Sections:
+=========
 
 1. Introduction
 2. License
