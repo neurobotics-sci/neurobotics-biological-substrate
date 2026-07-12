@@ -5,7 +5,7 @@ NOTE:
 =====
 
 Developed under DISA STIG-compliant Perforce; GitHub carries public OSS drops only.
-This represents the released codebase for the Bubo Mark XVI Hardware version.
+This represents the released codebase for the Bubo Mark XVII Hardware version.
 For more information contact kenneth.renshaw@neuroboticssci.ai or info@neuroboticssci.ai.
 
 Sections:
