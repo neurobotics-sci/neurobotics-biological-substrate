@@ -5,7 +5,7 @@ NOTE:
 =====
 
 Developed under DISA STIG-compliant Perforce; GitHub carries public OSS drops only.
-This represents the released codebase for the Bubo Mark XVII Hardware version.
+This represents the released codebase for the Bubo Mark XVII Hardware version ( this is a living number ).
 For more information contact kenneth.renshaw@neuroboticssci.ai or info@neuroboticssci.ai.
 
 Sections:
@@ -18,7 +18,7 @@ Sections:
 5. A Potpourri of Thoughts Regarding the Bubo Architecture
 
 Current Neurobotics LLC Research & Development work is completely withheld,
-except for a couple of hints for the astute reader *wink*.
+except for a couple of hints for the astute reader.
 
 Section 1. Introduction
 =======================
@@ -49,11 +49,11 @@ https://github.com/neurobotics-sci/neurobotics-biological-substrate/blob/main/LI
 Section 3. Getting Started - Ansible codebase deployment
 ========================================================
 
-Read about neuroscience *grin*
+Read about neuroscience.
 
 At the least to get this codebase up and running you will need a solid understanding of Linux, some Ansible knowledge, and some Python/PIP knowledge.
 
-The easiest path is to load up all the functional modules onto one x86-based node and run in a simulated manner for testing and development and then deploy to the edge Jetsons or whatever you choose instead. Our future directions is not NVIDIA-centric I assure you *grin*
+The easiest path is to load up all the functional modules onto one x86-based node and run in a simulated manner for testing and development and then deploy to the edge Jetsons or whatever you choose instead.
 
 Setup your ansible packages, your SSH user keychain and deploy it via ssh-copy-id to <user>@localhost if that is what you are doing, and then dive into the deep end here and see how the water is!
 
@@ -126,8 +126,8 @@ reticular | SUCCESS =>
 
 PLAY [Brain — Bootstrap all hardware nodes] ************************************
 TASK [Gathering Facts] *********************************************************
-TASK [common : Update apt cache (Bypass Python 3.6 trap)] **********************
-TASK [common : Install system packages (Bypass Python 3.6 trap)] ***************
+TASK [common : Update apt cache] **********************
+TASK [common : Install system packages] ***************
 TASK [common : Create brain user] **********************************************
 TASK [common : Create directory structure] *************************************
 TASK [common : Push SBALF Codebase from Perforce Workspace to Edge Nodes] ******
