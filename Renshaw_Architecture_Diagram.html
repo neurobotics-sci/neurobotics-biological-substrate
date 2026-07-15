@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> The Neurobotics Architecture</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f5f3;
+    --color-background-tertiary: #f0ede8;
+    --color-text-primary: #1a1a18;
+    --color-text-secondary: #5f5e5a;
+    --color-text-tertiary: #888780;
+    --color-border-tertiary: rgba(0,0,0,0.12);
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1e1e1c;
+      --color-background-secondary: #2a2a28;
+      --color-background-tertiary: #232321;
+      --color-text-primary: #e8e6e0;
+      --color-text-secondary: #9c9a92;
+      --color-text-tertiary: #6e6d68;
+      --color-border-tertiary: rgba(255,255,255,0.1);
+    }
+  }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-background-tertiary);
+    color: var(--color-text-primary);
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--color-background-primary);
+    border-radius: 16px;
+    padding: 28px 28px 24px;
+    border: 1px solid var(--color-border-tertiary);
+  }
+  .arch-header { margin-bottom: 18px; }
+  .arch-title { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .arch-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; line-height: 1.5; }
+  .arch-grid { display: grid; grid-template-columns: 1fr 200px; gap: 12px; }
+  .tier {
+    border-radius: 8px;
+    background: var(--color-background-secondary);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 4px solid var(--tc, #888);
+  }
+  .tier-lbl {
+    font-size: 10px; font-weight: 500; color: var(--color-text-secondary);
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip {
+    font-size: 11px; border-radius: 6px; padding: 4px 10px;
+    background: var(--color-background-primary);
+    border: 1px solid var(--color-border-tertiary);
+    color: var(--color-text-primary);
+    cursor: pointer; transition: opacity .15s, border-color .15s;
+    white-space: nowrap; text-decoration: none; display: inline-block;
+  }
+  .chip:hover { opacity: .6; border-color: var(--tc, #888); }
+  .chip.accent { border-color: var(--tc, #888); }
+  .cog-col { display: flex; flex-direction: column; gap: 5px; }
+  .cog-lbl {
+    font-size: 10px; font-weight: 500; color: var(--color-text-secondary);
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px;
+  }
+  .cog-card {
+    font-size: 12px; border-radius: 8px; padding: 8px 11px;
+    background: var(--color-background-secondary);
+    border-left: 3px solid #BA7517;
+    color: var(--color-text-primary);
+    cursor: pointer; transition: opacity .15s; line-height: 1.3;
+  }
+  .cog-card:hover { opacity: .65; }
+  .cog-new { font-size: 10px; color: #BA7517; font-weight: 500; margin-top: 2px; }
+  .safety {
+    border-radius: 8px; background: var(--color-background-secondary);
+    border-left: 4px solid #A32D2D; padding: 9px 12px;
+    margin: 10px 0; display: flex; flex-wrap: wrap;
+    gap: 7px 18px; align-items: center;
+  }
+  .safety-lbl {
+    font-size: 10px; font-weight: 500; color: var(--color-text-secondary);
+    text-transform: uppercase; letter-spacing: .05em; white-space: nowrap;
+  }
+  .safety-chip { font-size: 11px; color: #A32D2D; font-weight: 500; cursor: pointer; transition: opacity .15s; }
+  .safety-chip:hover { opacity: .6; }
+  .dep-lbl {
+    font-size: 10px; font-weight: 500; color: var(--color-text-secondary);
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px;
+  }
+  .dep-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 4px; }
+  .dep-card {
+    border-radius: 8px; padding: 10px 8px;
+    background: var(--color-background-secondary);
+    border: 1px solid var(--color-border-tertiary);
+    text-align: center; cursor: pointer; transition: opacity .15s;
+  }
+  .dep-card:hover { opacity: .65; }
+  .dep-name { font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+  .dep-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .dep-cost { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+  .dep-badge {
+    display: inline-block; font-size: 10px; border-radius: 4px;
+    padding: 2px 6px; margin-top: 5px; font-weight: 500;
+    background: var(--color-background-primary);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border-tertiary);
+  }
+  .divider { height: 1px; background: var(--color-border-tertiary); margin: 7px 0; }
+  .footer {
+    margin-top: 14px; font-size: 11px;
+    color: var(--color-text-tertiary); text-align: center; line-height: 1.5;
+  }
+  .tooltip {
+    display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--color-background-primary);
+    border: 1px solid var(--color-border-tertiary);
+    border-radius: 10px; padding: 12px 18px;
+    max-width: 520px; width: 90%;
+    font-size: 13px; color: var(--color-text-primary);
+    line-height: 1.5; z-index: 100;
+    box-shadow: 0 4px 24px rgba(0,0,0,.12);
+  }
+  .tooltip.visible { display: block; }
+  .tooltip-close {
+    float: right; cursor: pointer; font-size: 18px; line-height: 1;
+    color: var(--color-text-secondary); margin-left: 12px;
+  }
+  .tooltip-label { font-weight: 500; margin-bottom: 4px; font-size: 13px; }
+  .tooltip-body { font-size: 12px; color: var(--color-text-secondary); }
+  @media (max-width: 680px) {
+    body { padding: 12px; }
+    .page { padding: 16px; border-radius: 12px; }
+    .arch-grid { grid-template-columns: 1fr; }
+    .dep-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="arch-header">
+    <div class="arch-title">The Neurobotics Architecture</div>
+    <div class="arch-sub">
+      40+ nodes &nbsp;·&nbsp; 7-Tiered  &nbsp;·&nbsp; Deterministic SBUD &nbsp;·&nbsp;
+      Experiential SBALF &nbsp;·&nbsp; Kenneth Renshaw and Shannon Renshaw, 2026
+      &nbsp;·&nbsp; Click any node for details
+    </div>
+  </div>
+
+  <div class="arch-grid">
+
+    <div>
+
+      <div class="tier" style="--tc:#185FA5">
+        <div class="tier-lbl">Tier 1 — Homeostatic &nbsp; </div>
+        <div class="chips">
+          <span class="chip accent" onclick="show('Hypothalamus','HPA axis · BMAL1/CLOCK circadian ODE · thermal regulation · DA/NE/5-HT modulation · ')">Hypothalamus</span>
+          <span class="chip accent" onclick="show('Thalamus-L','VPL somatosensory relay · LGN visual · MGN auditory · Pulvinar · alpha-gate gating · ')">Thalamus-L</span>
+          <span class="chip accent" onclick="show('Thalamus-R','VA motor relay · VL cerebellar · MD prefrontal · Reuniens hippocampal · ')">Thalamus-R</span>
+          <span class="chip accent" onclick="show('Insula','Interoception · fatigue tracking · nod-off detection · pain integration · ')">Insula</span>
+          <span class="chip accent" onclick="show('GWT / IIT Φ','Global Workspace Theory broadcast 10Hz · IIT Phi approximation top-8 nodes · consciousness substrate · self-report')">GWT / IIT Φ</span>
+          <span class="chip accent" onclick="show('NALB','Neural Adaptive Load Balancer · 95% thermal threshold → social mode · human consent · survival override · 2s poll')">NALB</span>
+        </div>
+      </div>
+
+      <div class="tier" style="--tc:#0F6E56">
+        <div class="tier-lbl">Tier 2 — Limbic / Memory &nbsp;</div>
+        <div class="chips">
+          <span class="chip" onclick="show('Hippocampus','EKF-SLAM · DG/CA3/CA1 architecture · RTABMap 3D SLAM bridge · episodic encoding · theta oscillations · ')">Hippocampus</span>
+          <span class="chip" onclick="show('Amygdala','LA lateral nucleus · BA basal · CeA central · Hebbian fear learning · dual-pathway (low-road 80ms) ·')">Amygdala</span>
+          <span class="chip" onclick="show('LTM Store','Multimodal LTM · FAISS HNSW index · visual + audio + spatial + emotion + linguistic · limbic saliency weighting ·')">LTM Store</span>
+          <span class="chip" onclick="show('Association Cortex','STS superior temporal sulcus · Mirror Neuron System · Temporal Binding Window · multimodal integration ·')">Association cortex</span>
+          <span class="chip" onclick="show('Emotion Chip','14 emotions · VAE 200-dim latent · somatic markers (Damasio) · valence/arousal/dominance · 4 neuromodulators · runs on PFC node')">Emotion chip</span>
+        </div>
+      </div>
+
+      <div class="tier" style="--tc:#854F0B">
+        <div class="tier-lbl">Tier 3 — Sensory &nbsp;</div>
+        <div class="chips">
+          <span class="chip" onclick="show('Visual V1/V2/MT','V1 edge detection · V2 orientation · MT motion · saccadic masking efference copy · 40–65% bandwidth reduction ·')">Visual V1/V2/MT</span>
+          <span class="chip" onclick="show('Auditory A1','Primary auditory cortex · vestibular integration · VOR 200Hz · IMU MPU-9250 · ')">Auditory A1</span>
+          <span class="chip" onclick="show('S1 Homunculus','64-zone somatosensory body map · cortical magnification · TRPV1 pain · WDR wide-dynamic-range · STT spinothalamic ·')">S1 homunculus</span>
+          <span class="chip" onclick="show('Superior Colliculus','SGBM stereo depth · foveation control · PRU BeagleBoard · PPS timing sync · saccade generation ·')">Sup. colliculus</span>
+          <span class="chip" onclick="show('Saccadic Masking','Efference copy suppresses ZMQ pub during saccade window (40–200ms) · 40–65% bandwidth saved · patent pending')">Saccadic masking</span>
+        </div>
+      </div>
+
+      <div class="tier" style="--tc:#534AB7">
+        <div class="tier-lbl">Tier 4 — Motor / Cerebellar &nbsp;</div>
+        <div class="chips">
+          <span class="chip" onclick="show('Cerebellum CMAC','Cerebellar Model Articulation Controller (Albus 1971) · 8 hash tables · dead-zone adaptive · limp mode · PPO RL overlay ·')">Cerebellum CMAC</span>
+          <span class="chip" onclick="show('Basal Ganglia','Dopamine temporal-difference learning · ACC conflict monitoring · action selection gating · ')">Basal ganglia</span>
+          <span class="chip" onclick="show('M1 Motor Cortex','Primary motor cortex · 50Hz command rate · S1 online correction · feedforward + feedback · hosted on pfc-l node')">M1 motor cortex</span>
+          <span class="chip" onclick="show('Premotor / SMA','Motor programme sequencing · supplementary motor area · mirror neuron activation · hosted on pfc-r node')">Premotor / SMA</span>
+          <span class="chip" onclick="show('MPC Balance','Linear Inverted Pendulum Model · OSQP solver · TerrainMapper · SlipDetector · ZMP constraint · 10Hz prediction horizon')">MPC balance</span>
+          <span class="chip" onclick="show('PPO Gait RL','Proximal Policy Optimisation · residual RL on top of CPG · safe deployment gate · pure numpy PolicyNetwork · BeagleBoard')">PPO gait RL</span>
+        </div>
+      </div>
+
+      <div class="tier" style="--tc:#993C1D">
+        <div class="tier-lbl">Tier 5 — Cortical / Social &nbsp; </div>
+        <div class="chips">
+          <span class="chip accent" onclick="show('PFC-Left','dlPFC working memory · goal selection · oracle queries · NALB integration · Emotion Chip host · ')">PFC-Left</span>
+          <span class="chip accent" onclick="show('PFC-Right','Predictive processing · Premotor/SMA host · visuospatial integration · ')">PFC-Right</span>
+          <span class="chip accent" onclick="show('Social Node','ArcFace face recognition · oxytocin bonding dynamics · social curiosity engine · latent emotion VAE · LLM integration · '">Social node</span>
+          <span class="chip accent" onclick="show('Broca Area','IFG BA44/45 · speech act generation · motor sequence programming · Whisper STT + Piper TTS ·')">Broca area</span>
+          <span class="chip" onclick="show('Speech I/O','Whisper STT (all sizes) · Piper TTS · emotional prosody modulation (rate/pitch/volume from AffectiveState) · VAD')">Speech I/O</span>
+          <span class="chip" onclick="show('Web Search','Wikipedia REST API · DuckDuckGo instant answers · idle curiosity queue · source attribution · knowledge_search.py')">Web search</span>
+        </div>
+      </div>
+
+      <div class="tier" style="--tc:#3B6D11">
+        <div class="tier-lbl">Tier 6 — Oracle &nbsp; Bicameral Edge LLM slaved to VSA Coprocessor</div>
+        <div class="chips">
+          <span class="chip" onclick="show('Bloom Routing','Remember (80 tok/Haiku) → Understand → Apply → Analyse → Evaluate → Create (400 tok/Sonnet) · topic mastery table · stretch questions')">Bloom routing</span>
+        </div>
+      </div>
+
+      <div class="tier" style="--tc:#5F5E5A">
+        <div class="tier-lbl">Tier 7 — Spinal / Hardware &nbsp;</div>
+        <div class="chips">
+          <span class="chip" onclick="show('Spinal Arms','2×7-DOF IK · Omnihand 16-DOF ×2  · Dynamixel bus · STM32H7 1kHz PID co-processor')">Spinal arms</span>
+          <span class="chip" onclick="show('Spinal Legs','CPG central pattern generator · ZMP criterion · IMU 500Hz · PRU BeagleBoard real-time · heartbeat watchdog ')Spinal legs</span>
+          <span class="chip" onclick="show('STM32H7','480MHz ARM Cortex-M7 · 1kHz servo PID · UART bridge to Jetson · hardware watchdog · <100μs jitter')">STM32H7</span>
+          <span class="chip" onclick="show('Omnihand ×2','4-finger symmetric design · 16 DOF per hand · 7 grasp modes · fingertip 4× pressure + temp + force · 30ms pain reflex')">Omnihand ×2</span>
+          <span class="chip" onclick="show('Oculomotor VOR','Vestibulo-ocular reflex 200Hz · saccade compensation · efference copy to visual node · PRU BeagleBoard')">Oculomotor VOR</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="cog-col">
+      <div class="cog-lbl">Cognitive Features</div>
+
+      <div class="cog-card" onclick="show('Autobiographical Self','Damasio 5-component selfhood · eigenself OCEAN traits (O:0.85 C:0.80 E:0.55 A:0.82 N:0.18) · self-consistency monitor · SelfConsistencyMonitor · persists across power cycles')">
+        Autobiographical self
+        <div class="cog-new">Damasio · eigenself · OCEAN</div>
+      </div>
+      <div class="cog-card" onclick="show('Friendship Engine','Aristotelian virtue friendship · 6 dimensions: bond, knowledge, reciprocity, trust, care, growth · Dunbar tiers (stranger→intimate) · pending follow-up queue · care level grows slowest')">
+        Friendship engine
+        <div class="cog-new">Aristotle · Dunbar tiers</div>
+      </div>
+      <div class="cog-card" onclick="show('Humor System','HumorDetector: punchline patterns, incongruity, social context · HumorGenerator: self-deprecating pool + LLM contextual · no-mean-humor via eigenself integrity · affiliative primary style')">
+        Humor system
+        <div class="cog-new">Detection · generation</div>
+      </div>
+      <div class="cog-card" onclick="show('Social Danger Detector','5 categories: crisis, manipulation, distress, dependency, grooming · regex + temporal + valence drift · crisis bypasses all → validated resources immediately · deliberately sensitive')">
+        Social danger
+        <div class="cog-new">5 categories · crisis bypass</div>
+      </div>
+      <div class="cog-card" onclick="show('Bloom Taxonomy','Remember→Create hierarchy · query classifier (verb matching) · LLM guidance per level · max_tokens 80→400 · topic mastery table · stretch question generation')">
+        Bloom taxonomy
+        <div class="cog-new">Remember → Create</div>
+      </div>
+      <div class="cog-card" onclick="show('Idle Learner DMN','Default Mode Network (Buckner 2008) · 120s silence → idle mode · Wikipedia + DuckDuckGo · world model FAISS · human weighting queue · social danger model enrichment')">
+        Idle learner DMN
+        <div class="cog-new">Buckner 2008 · web search</div>
+      </div>
+      <div class="cog-card" onclick="show('Smart Aging','Ebbinghaus decay R(t)=e^(-t/S) · emotional 5× · social 3× · human-weighted 1000× · rehearsal 2× per retrieval · immortal tier · 2.5MB/day kept · 16GB SSD for 3yr')">
+        Smart aging
+        <div class="cog-new">Ebbinghaus · 1000× human</div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="cog-lbl" style="margin-top:2px">Architectural Features</div>
+
+      <div class="cog-card" style="border-left-color:#185FA5;font-size:11px;padding:6px 10px" onclick="show('FPGA-Based Vector Symbolic Coprocessor Subsystem - Dynamically Reconfigurable Hypervector Dimensionality')">
+        HDC/VSA-based operation
+      </div>
+      <div class="cog-card" style="border-left-color:#185FA5;font-size:11px;padding:6px 10px" onclick="show('Neural Bus','ZMQ Pub/Sub and VSA-native hypervectors· msgpack serialisation (5× faster than JSON) · topic registry (T class, 70+ topics) · 100ms recv timeout · per-node pub port + multi-endpoint sub')">
+        Neural bus · Topics
+      </div>
+      <div class="cog-card" style="border-left-color:#185FA5;font-size:11px;padding:6px 10px" onclick="show('HAL — Servos, Actuators and Sensors all abstracted - Full Optoisolation between incoming signals and brain')">
+        HAL and Galvanic Barrier · Brain/Body Abstraction
+      </div>
+      <div class="cog-card" style="border-left-color:#185FA5;font-size:11px;padding:6px 10px" onclick="show('Biologically Accurate Implementation of the Human Central Nervous System')">
+        Distributed Neuromorphic Design
+      </div>
+    </div>
+
+  </div>
+
+  <div class="safety">
+    <span class="safety-lbl">Safety</span>
+    <span class="safety-chip" onclick="show('Vagus Nerve Kill Switch','IEC 60204-1 Category 1 · NE556 relay cuts servo 24V rail · BeagleBoard GPIO60 · fires in <1ms · hardware-only path — no software can prevent it once triggered')">Vagus nerve IEC 60204-1 Cat.1</span>
+    <span class="safety-chip" onclick="show('Galvanic Barrier PCB','6N137 optoisolator array · HCPL-7840 isolated current sensing · ISO1540 I2C isolator · 135× ground-loop noise reduction · patent pending')">Galvanic barrier PCB</span>
+    <span class="safety-chip" onclick="show('NALB Human Consent','At 95% thermal: Bubo says "I am at X% capacity — shall I continue?" · waits for explicit yes/no · never self-authorises mode change · survival override only exception')">NALB human consent</span>
+    <span class="safety-chip" onclick="show('Limp Mode / Nod-off','Limp mode: torque reduction cascade on fault · nod-off: insula detects fatigue → staged power reduction → charger-seek behaviour · glial cleanup on charge')">Limp mode · nod-off</span>
+  </div>
+
+  <div class="dep-lbl">3 Deployment Models ( OSS, SBUD, SBALF ) — Single Unified Codebase · Ansible Infrastructure as Code Deployment Tool;</div>
+
+
+  <div class="footer">
+    Neurobotics LLC &nbsp;·&nbsp; Kenneth Renshaw &nbsp;·&nbsp; Shannon Renshaw &nbsp;·&nbsp;
+    50 years in the making &nbsp;·&nbsp; github.com/neurobotics-sci/neurobotics-biological-substrate &nbsp;·&nbsp;
+  </div>  
+  <div class="footer">  
+    Open source. Open brain. Real. Now. &nbsp;·&nbsp; OSS + AGPL-3.0 + Commercial and Enterprise Licensing Available
+  </div>
+
+</div>
+
+<div class="tooltip" id="tip">
+  <span class="tooltip-close" onclick="hideTip()">×</span>
+  <div class="tooltip-label" id="tip-label"></div>
+  <div class="tooltip-body" id="tip-body"></div>
+</div>
+
+<script>
+function show(label, body){
+  document.getElementById('tip-label').textContent = label;
+  document.getElementById('tip-body').textContent = body;
+  document.getElementById('tip').classList.add('visible');
+}
+function hideTip(){
+  document.getElementById('tip').classList.remove('visible');
+}
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') hideTip();
+});
+</script>
+
+</body>
+</html>
